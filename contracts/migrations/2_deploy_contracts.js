@@ -13,7 +13,7 @@ module.exports = async function (deployer, network) {
 
   // await deployer.deploy(OmniverseProtocol);
   await deployer.link(OmniverseProtocol, SkywalkerFungible);
-  await deployer.deploy(SkywalkerFungible, "X", "X", "X");
+  await deployer.deploy(SkywalkerFungible, "X", "X");
 
   // Update config
   if (network.indexOf('-fork') != -1 || network == 'test' || network == 'development') {
