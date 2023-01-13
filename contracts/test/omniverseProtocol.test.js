@@ -48,80 +48,72 @@ let signData = (hash, sk) => {
     return '0x' + Buffer.from(signature.signature).toString('hex') + (signature.recid == 0 ? '1b' : '1c');
 }
 
-let getRawData = (txData, op, params) => {
-    let bData;
-    if (op == MINT) {
-        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
-    }
-    else if (op == TRANSFER) {
-        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
-    }
-    else if (op == WITHDRAW) {
-        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(new BN(params[0]).toString('hex').padStart(32, '0'), 'hex')]);
-    }
-    else if (op == DEPOSIT) {
-        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
-    }
-    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(2, '0'), 'hex'),
-        Buffer.from(txData.from.slice(2), 'hex'), Buffer.from(txData.to), bData]);
+let getRawData = (txData) => {
+    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(8, '0'), 'hex'),
+    Buffer.from(txData.initiator.slice(2), 'hex'), Buffer.from(txData.from.slice(2), 'hex'), Buffer.from(new BN(txData.op).toString('hex').padStart(2, '0'), 'hex'),
+    Buffer.from(txData.data.slice(2), 'hex'), Buffer.from(new BN(txData.amount).toString('hex').padStart(32, '0'), 'hex')]);
     return ret;
 }
 
 let encodeMint = (from, toPk, amount, nonce) => {
-    let transferData = web3js.eth.abi.encodeParameters(['bytes', 'uint256'], [toPk, amount]);
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
+        initiator: Fungible.address,
         from: from.pk,
-        to: TOKEN_ID,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes'], [MINT, transferData]),
+        op: MINT,
+        data: toPk,
+        amount: amount,
     }
-    let bData = getRawData(txData, MINT, [toPk, amount]);
+    let bData = getRawData(txData);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
 
 let encodeTransfer = (from, toPk, amount, nonce) => {
-    let transferData = web3js.eth.abi.encodeParameters(['bytes', 'uint256'], [toPk, amount]);
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
+        initiator: Fungible.address,
         from: from.pk,
-        to: TOKEN_ID,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes'], [TRANSFER, transferData]),
+        op: TRANSFER,
+        data: toPk,
+        amount: amount,
     }
-    let bData = getRawData(txData, TRANSFER, [toPk, amount]);
+    let bData = getRawData(txData);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
 
 let encodeWithdraw = (from, amount, nonce, chainId) => {
-    let transferData = web3js.eth.abi.encodeParameters(['uint256'], [amount]);
     let txData = {
         nonce: nonce,
         chainId: chainId ? chainId : CHAIN_ID,
+        initiator: Fungible.address,
         from: from.pk,
-        to: TOKEN_ID,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes'], [WITHDRAW, transferData]),
+        op: WITHDRAW,
+        data: '0x',
+        amount: amount,
     }
-    let bData = getRawData(txData, WITHDRAW, [amount]);
+    let bData = getRawData(txData);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
 
 let encodeDeposit = (from, toPk, amount, nonce, chainId) => {
-    let transferData = web3js.eth.abi.encodeParameters(['bytes', 'uint256'], [toPk, amount]);
     let txData = {
         nonce: nonce,
         chainId: chainId ? chainId : CHAIN_ID,
+        initiator: Fungible.address,
         from: from.pk,
-        to: TOKEN_ID,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes'], [DEPOSIT, transferData]),
+        op: DEPOSIT,
+        data: toPk,
+        amount: amount,
     }
-    let bData = getRawData(txData, DEPOSIT, [toPk, amount]);
+    let bData = getRawData(txData);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
@@ -137,7 +129,9 @@ contract('SkywalkerFungible', function() {
     let initContract = async function() {
         let protocol = await OmniverseProtocol.new();
         Fungible.link(protocol);
-        fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
+        fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
+        Fungible.address = fungible.address;
+        await fungible.addMembers([[CHAIN_ID, Fungible.address]]);
         await fungible.setCooingDownTime(COOL_DOWN);
         await fungible.setCommitteeAddress(committeePk);
     }
@@ -245,15 +239,12 @@ contract('SkywalkerFungible', function() {
             await initContract();
         });
     
-        describe('Wrong destination', function() {
+        describe('Wrong initiator', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
-                txData.to = 'LandRover';
-                let bData = getRawData(txData, TRANSFER, [user2Pk, TEN_TOKEN]);
-                let hash = keccak256(bData);
-                txData.signature = signData(hash, user1Sk);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Wrong destination');
+                txData.initiator = user1;
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Wrong initiator');
             });
         });
     
@@ -356,7 +347,6 @@ contract('SkywalkerFungible', function() {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1);
                 let ret = await fungible.triggerExecution();
-                console.log('ret',ret)
                 let o = await fungible.owner();
                 assert(ret.logs[1].event == 'OmniverseTokenTransfer');
                 let balance = await fungible.omniverseBalanceOf(user1Pk);
@@ -429,6 +419,7 @@ contract('SkywalkerFungible', function() {
         describe('Message received from other chain', function() {
             before(async function() {
                 await initContract();
+                await fungible.addMembers([[CHAIN_ID_OTHER, Fungible.address]]);
                 await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
             });
 
@@ -564,6 +555,7 @@ contract('SkywalkerFungible', function() {
         describe('Message received from other chain', function() {
             before(async function() {
                 await initContract();
+                await fungible.addMembers([[CHAIN_ID_OTHER, Fungible.address]]);
             });
 
             it('should succeed', async () => {
