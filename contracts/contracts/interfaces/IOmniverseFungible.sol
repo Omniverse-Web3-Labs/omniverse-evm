@@ -12,7 +12,7 @@ interface IOmniverseFungible {
     /**
      * @dev Send an omniverse transaction
      */
-    function sendOmniverseTransaction(OmniverseTokenProtocol calldata _data) external;
+    function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external;
 
     /**
      * @dev Returns the omniverse balance of a user

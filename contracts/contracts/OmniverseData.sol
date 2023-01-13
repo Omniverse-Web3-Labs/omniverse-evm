@@ -6,17 +6,19 @@ uint8 constant TRANSFER = 1;
 uint8 constant WITHDRAW = 2;
 uint8 constant MINT = 3;
 
-struct OmniverseTokenProtocol {
+struct OmniverseTransactionData {
     uint256 nonce;
-    uint8 chainId;
+    uint32 chainId;
+    bytes initiator;
     bytes from;
-    string to;
+    uint8 op;
     bytes data;
+    uint256 amount;
     bytes signature;
 }
     
 struct OmniverseTx {
-    OmniverseTokenProtocol txData;
+    OmniverseTransactionData txData;
     uint256 timestamp;
 }
 

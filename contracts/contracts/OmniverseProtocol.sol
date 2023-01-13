@@ -12,26 +12,8 @@ library OmniverseProtocol {
     /**
      * @dev Get the hash of a tx
      */
-    function getTransactionHash(OmniverseTokenProtocol memory _data) public pure returns (bytes32) {
-        bytes memory bData;
-        (uint8 op, bytes memory wrappedData) = abi.decode(_data.data, (uint8, bytes));
-        if (op == WITHDRAW) {
-            (uint256 amount) = abi.decode(wrappedData, (uint256));
-            bData = abi.encodePacked(op, uint128(amount));
-        }
-        else if (op == TRANSFER) {
-            (bytes memory to, uint256 amount) = abi.decode(wrappedData, (bytes, uint256));
-            bData = abi.encodePacked(op, to, uint128(amount));
-        }
-        else if (op == DEPOSIT) {
-            (bytes memory to, uint256 amount) = abi.decode(wrappedData, (bytes, uint256));
-            bData = abi.encodePacked(op, to, uint128(amount));
-        }
-        else if (op == MINT) {
-            (bytes memory to, uint256 amount) = abi.decode(wrappedData, (bytes, uint256));
-            bData = abi.encodePacked(op, to, uint128(amount));
-        }
-        bytes memory rawData = abi.encodePacked(uint128(_data.nonce), _data.chainId, _data.from, _data.to, bData);
+    function getTransactionHash(OmniverseTransactionData memory _data) public pure returns (bytes32) {
+        bytes memory rawData = abi.encodePacked(uint128(_data.nonce), _data.chainId, _data.initiator, _data.from, _data.op, _data.data, uint128(_data.amount));
         return keccak256(rawData);
     }
 
@@ -61,7 +43,7 @@ library OmniverseProtocol {
         require(_address == pkAddress, "Sender not signer");
     }
 
-    function verifyTransaction(RecordedCertificate storage rc, OmniverseTokenProtocol memory _data) public returns (VerifyResult) {
+    function verifyTransaction(RecordedCertificate storage rc, OmniverseTransactionData memory _data) public returns (VerifyResult) {
         uint256 nonce = rc.txList.length;
         
         bytes32 txHash = getTransactionHash(_data);
