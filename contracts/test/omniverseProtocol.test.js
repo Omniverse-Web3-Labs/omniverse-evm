@@ -15,10 +15,11 @@ const HUNDRED_TOKEN = '100000000000000000000';
 const TOKEN_ID = 'skywalker';
 const COOL_DOWN = 2;
 
-const DEPOSIT = 0;
-const TRANSFER = 1;
-const WITHDRAW = 2;
-const MINT = 3;
+const TRANSFER = 0;
+const MINT = 1;
+const BURN = 2;
+const DEPOSIT = 3;
+const WITHDRAW = 4;
 
 const Fungible = artifacts.require('./MockFungible.sol');
 const OmniverseProtocol = artifacts.require('./OmniverseProtocol.sol');

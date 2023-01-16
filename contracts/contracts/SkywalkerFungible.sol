@@ -7,21 +7,36 @@ import "./libraries/OmniverseProtocol.sol";
 import "./interfaces/IOmniverseFungible.sol";
 
 contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
-    uint8 constant DEPOSIT = 0;
-    uint8 constant TRANSFER = 1;
-    uint8 constant WITHDRAW = 2;
-    uint8 constant MINT = 3;
+    uint8 constant TRANSFER = 0;
+    uint8 constant MINT = 1;
+    uint8 constant BURN = 2;
+    uint8 constant DEPOSIT = 3;
+    uint8 constant WITHDRAW = 4;
 
+    /**
+     * @dev Deposit request information
+     * receiver: The target of deposit
+     * amount: The amount of deposit
+     */
     struct DepositRequest {
         bytes receiver;
         uint256 amount;
     }
 
+    /** @dev Used to index a delayed transaction
+     * sender: The account which sent the transaction
+     * nonce: The nonce of the delayed transaction
+     */
     struct DelayedTx {
         bytes sender;
         uint256 nonce;
     }
 
+    /**
+     * @dev The member information
+     * chainId: The chain which the member belongs to
+     * contractAddr: The contract address on the member chain
+     */
     struct Member {
         uint32 chainId;
         bytes contractAddr;
@@ -44,7 +59,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     DelayedTx[] delayedTxs;
     // MPC address who has the permission to deposit
     bytes public committee;
-    // Deposit request list
+    // Deposit request list to be reviewed
     DepositRequest[] depositRequests;
     // Current dealing deposit request index
     uint256 public depositDealingIndex;
@@ -54,8 +69,6 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     event OmniverseTokenTransfer(bytes from, bytes to, uint256 value);
     event OmniverseTokenWithdraw(bytes from, uint256 value);
     event OmniverseTokenDeposit(bytes to, uint256 value);
-    event OmniverseTokenWrongOp(bytes sender, uint8 op);
-    event TransactionSent(bytes pk, uint256 nonce);
 
     /**
      * @dev Throws if called by any account other than the committe
@@ -92,9 +105,9 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev Trigger the execution of the first delayed transaction
+     * @dev See {IOmniverseFungible-triggerExecution}
      */
-    function triggerExecution() external {
+    function triggerExecution() external override {
         require(delayedTxs.length > 0, "No delayed tx");
 
         OmniverseTx storage cache = transactionCache[delayedTxs[0].sender];
@@ -125,9 +138,6 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
         else if (op == MINT) {
             _checkOwner(txData.from);
             _omniverseMint(txData.data, txData.amount);
-        }
-        else {
-            emit OmniverseTokenWrongOp(txData.from, op);
         }
     }
     

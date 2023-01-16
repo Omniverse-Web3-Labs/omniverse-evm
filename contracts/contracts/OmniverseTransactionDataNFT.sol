@@ -9,14 +9,14 @@ pragma solidity >=0.8.0 <0.9.0;
  * from: The Omniverse account which signs the o-transaction
  * op: The operation type
  * data: The operation data
- * amount: The amount of token which is operated
+ * tokenId: the token id
  * signature: The signature of the above informations
  * 
  * NOTE op: 0-31 are reserved values, 32-255 are custom values
  * 
- * op: 0 Transfers omniverse token `amount` from user `from` to user `data`, `from` MUST have at least `amount` token
- * op: 1 User `from` mints token `amount` to user `data`
- * op: 2 User `from` burns token `amount` from user `data`
+ * op: 0 Transfers omniverse token `tokenId` from user `from` to user `data`, the token `tokenId` MUST be owned by `from`
+ * op: 1 User `from` mints token `tokenId` to user `data`
+ * op: 2 User `from` burns token `tokenId` from user `data`
  */
 struct OmniverseTransactionData {
     uint256 nonce;
@@ -25,6 +25,6 @@ struct OmniverseTransactionData {
     bytes from;
     uint8 op;
     bytes data;
-    uint256 amount;
+    uint256 tokenId;
     bytes signature;
 }
