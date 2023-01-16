@@ -131,7 +131,7 @@ contract('SkywalkerFungible', function() {
         Fungible.link(protocol);
         fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
         Fungible.address = fungible.address;
-        await fungible.addMembers([[CHAIN_ID, Fungible.address]]);
+        await fungible.setMembers([[CHAIN_ID, Fungible.address]]);
         await fungible.setCooingDownTime(COOL_DOWN);
         await fungible.setCommitteeAddress(committeePk);
     }
@@ -155,7 +155,7 @@ contract('SkywalkerFungible', function() {
                 let nonce = await fungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
                 txData.signature = txData.signature.slice(0, -2);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Signature verifying failed');
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Verify failed');
             });
         });
 
@@ -164,7 +164,7 @@ contract('SkywalkerFungible', function() {
                 let nonce = await fungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
                 txData.from = ownerPk;
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Sender not signer');
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Signer not sender');
             });
         });
 
@@ -205,7 +205,7 @@ contract('SkywalkerFungible', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(ownerPk) - 1;
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Transaction duplicated');
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Duplicated');
             });
         });
 
@@ -275,7 +275,7 @@ contract('SkywalkerFungible', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(ownerPk);
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'User is malicious');
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'User malicious');
             });
         });
     });
@@ -419,7 +419,7 @@ contract('SkywalkerFungible', function() {
         describe('Message received from other chain', function() {
             before(async function() {
                 await initContract();
-                await fungible.addMembers([[CHAIN_ID_OTHER, Fungible.address]]);
+                await fungible.setMembers([[CHAIN_ID, Fungible.address], [CHAIN_ID_OTHER, Fungible.address]]);
                 await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
             });
 
@@ -453,13 +453,13 @@ contract('SkywalkerFungible', function() {
 
         describe('Signer and sender not match', function() {
             it('should fail', async () => {
-                await utils.expectThrow(fungible.requestDeposit(user1Pk, ONE_TOKEN, {from: user2}), 'Signer and receiver not match');
+                await utils.expectThrow(fungible.requestDeposit(user1Pk, ONE_TOKEN, {from: user2}), 'Signer not sender');
             });
         });
 
         describe('Deposit amount exceeds balance', function() {
             it('should fail', async () => {
-                await utils.expectThrow(fungible.requestDeposit(user1Pk, HUNDRED_TOKEN, {from: user1}), 'Deposit amount exceeds balance');
+                await utils.expectThrow(fungible.requestDeposit(user1Pk, HUNDRED_TOKEN, {from: user1}), 'Exceed balance');
             });
         });
 
@@ -494,7 +494,7 @@ contract('SkywalkerFungible', function() {
 
         describe('Sender not the committee', function() {
             it('should fail', async () => {
-                await utils.expectThrow(fungible.approveDeposit(1, 0, '0x', {from: user1}), 'Only committee can approve deposits');
+                await utils.expectThrow(fungible.approveDeposit(1, 0, '0x', {from: user1}), 'Not committee');
             });
         });
 
@@ -502,7 +502,7 @@ contract('SkywalkerFungible', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(committeePk);
                 let txData = encodeDeposit({pk: committeePk, sk: committeeSk}, user1Pk, ONE_TOKEN, nonce, CHAIN_ID);
-                await utils.expectThrow(fungible.approveDeposit(1, txData.nonce, txData.signature, {from: committee}), 'Index is not current');
+                await utils.expectThrow(fungible.approveDeposit(1, txData.nonce, txData.signature, {from: committee}), 'Index error');
             });
         });
 
@@ -555,7 +555,7 @@ contract('SkywalkerFungible', function() {
         describe('Message received from other chain', function() {
             before(async function() {
                 await initContract();
-                await fungible.addMembers([[CHAIN_ID_OTHER, Fungible.address]]);
+                await fungible.setMembers([[CHAIN_ID_OTHER, Fungible.address]]);
             });
 
             it('should succeed', async () => {

@@ -1,16 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./OmniverseData.sol";
+import "../OmniverseTransactionData.sol";
 
 enum VerifyResult {
     Success,
     Malicious
 }
+    
+struct OmniverseTx {
+    OmniverseTransactionData txData;
+    uint256 timestamp;
+}
+
+struct EvilTxData {
+    OmniverseTx txData;
+    uint256 hisNonce;
+}
+
+struct RecordedCertificate {
+    OmniverseTx[] txList;
+    EvilTxData[] evilTxList;
+}
 
 library OmniverseProtocol {
     /**
-     * @dev Get the hash of a tx
+     * @dev Get the hash of a transaction
      */
     function getTransactionHash(OmniverseTransactionData memory _data) public pure returns (bytes32) {
         bytes memory rawData = abi.encodePacked(uint128(_data.nonce), _data.chainId, _data.initiator, _data.from, _data.op, _data.data, uint128(_data.amount));
@@ -30,7 +45,7 @@ library OmniverseProtocol {
             v := mload(add(_signature, 65))
         }
         address recovered = ecrecover(_hash, v, r, s);
-        require(recovered != address(0), "Signature verifying failed");
+        require(recovered != address(0), "Verify failed");
         return recovered;
     }
 
@@ -40,9 +55,12 @@ library OmniverseProtocol {
     function checkPkMatched(bytes memory _pk, address _address) public pure {
         bytes32 hash = keccak256(_pk);
         address pkAddress = address(uint160(uint256(hash)));
-        require(_address == pkAddress, "Sender not signer");
+        require(_address == pkAddress, "Signer not sender");
     }
 
+    /**
+     * @dev Verify an omniverse transaction
+     */
     function verifyTransaction(RecordedCertificate storage rc, OmniverseTransactionData memory _data) public returns (VerifyResult) {
         uint256 nonce = rc.txList.length;
         
@@ -68,7 +86,7 @@ library OmniverseProtocol {
                 return VerifyResult.Malicious;
             }
             else {
-                revert("Transaction duplicated");
+                revert("Duplicated");
             }
         }
         else {
