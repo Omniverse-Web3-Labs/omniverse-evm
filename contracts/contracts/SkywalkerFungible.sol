@@ -27,17 +27,28 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
         bytes contractAddr;
     }
 
+    // Chain id used to distinguish different chains
     uint32 chainId;
+    // O-transaction cooling down time
     uint256 public cdTime;
+    // Omniverse accounts record
     mapping(bytes => RecordedCertificate) transactionRecorder;
+    // Transactions to be executed
     mapping(bytes => OmniverseTx) public transactionCache;
 
+    // All information of chains on which the token is deployed
     Member[] members;
+    // Omniverse balances
     mapping(bytes => uint256) omniverseBalances;
+    // Delay-executing transactions
     DelayedTx[] delayedTxs;
+    // MPC address who has the permission to deposit
     bytes public committee;
+    // Deposit request list
     DepositRequest[] depositRequests;
+    // Current dealing deposit request index
     uint256 public depositDealingIndex;
+    // Account map from evm address to public key
     mapping(address => bytes) accountsMap;
 
     event OmniverseTokenTransfer(bytes from, bytes to, uint256 value);
