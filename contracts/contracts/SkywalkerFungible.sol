@@ -107,7 +107,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     /**
      * @dev See {IOmniverseFungible-triggerExecution}
      */
-    function triggerExecution() external override {
+    function triggerExecution() external {
         require(delayedTxs.length > 0, "No delayed tx");
 
         OmniverseTx storage cache = transactionCache[delayedTxs[0].sender];

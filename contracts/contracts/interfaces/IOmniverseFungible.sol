@@ -11,19 +11,13 @@ interface IOmniverseFungible {
 
     /**
      * @dev Sends an omniverse transaction with omniverse transaction data `_data`
+     * NOTE The transaction MUST be deferred executed, and the developer should implement a trigger mechanism
      * @param _data Omniverse transaction data
      * See more information in OmniverseTransactionData.sol
-     */
-    function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external;
-
-    /**
-     * @dev Trigger the execution of the first delayed transaction
-     * 
-     * Revert if there is no delayed transaction is available
      *
      * Emit a {TransactionSent} event
      */
-    function triggerExecution() external;
+    function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external;
 
     /**
      * @dev Returns the count of transactions sent by user `_pk`
