@@ -1,4 +1,4 @@
-const OmniverseProtocol = artifacts.require("OmniverseProtocol");
+const SkywalkerFungibleHelper = artifacts.require("SkywalkerFungibleHelper");
 const SkywalkerFungible = artifacts.require("SkywalkerFungible");
 const fs = require("fs");
 
@@ -11,8 +11,7 @@ module.exports = async function (deployer, network) {
     return;
   }
 
-  // await deployer.deploy(OmniverseProtocol);
-  await deployer.link(OmniverseProtocol, SkywalkerFungible);
+  await deployer.link(SkywalkerFungibleHelper, SkywalkerFungible);
   await deployer.deploy(SkywalkerFungible, "X", "X");
 
   // Update config

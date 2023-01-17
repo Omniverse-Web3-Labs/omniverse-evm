@@ -22,7 +22,7 @@ const DEPOSIT = 3;
 const WITHDRAW = 4;
 
 const Fungible = artifacts.require('./MockFungible.sol');
-const OmniverseProtocol = artifacts.require('./OmniverseProtocol.sol');
+const SkywalkerFungibleHelper = artifacts.require('./SkywalkerFungibleHelper.sol');
 Fungible.defaults({
     gas: 8000000,
 });
@@ -63,8 +63,8 @@ let getRawData = (txData, op, params) => {
     else if (op == DEPOSIT) {
         bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
     }
-    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(2, '0'), 'hex'),
-        Buffer.from(txData.from.slice(2), 'hex'), Buffer.from(txData.initiator.slice(2), 'hex'), bData]);
+    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(8, '0'), 'hex'),
+        Buffer.from(txData.initiateSC.slice(2), 'hex'), Buffer.from(txData.from.slice(2), 'hex'), bData]);
     return ret;
 }
 
@@ -72,11 +72,11 @@ let encodeMint = (from, toPk, amount, nonce) => {
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
-        initiator: Fungible.address,
+        initiateSC: Fungible.address,
         from: from.pk,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, toPk, amount])
     }
-    let bData = getRawData(txData);
+    let bData = getRawData(txData, MINT, [toPk, amount]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
@@ -86,11 +86,11 @@ let encodeTransfer = (from, toPk, amount, nonce) => {
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
-        initiator: Fungible.address,
+        initiateSC: Fungible.address,
         from: from.pk,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, toPk, amount])
     }
-    let bData = getRawData(txData);
+    let bData = getRawData(txData, TRANSFER, [toPk, amount]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
@@ -100,11 +100,11 @@ let encodeWithdraw = (from, amount, nonce, chainId) => {
     let txData = {
         nonce: nonce,
         chainId: chainId ? chainId : CHAIN_ID,
-        initiator: Fungible.address,
+        initiateSC: Fungible.address,
         from: from.pk,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [WITHDRAW, '0x', amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [WITHDRAW, '0x', amount])
     }
-    let bData = getRawData(txData);
+    let bData = getRawData(txData, WITHDRAW, [amount]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
@@ -114,11 +114,11 @@ let encodeDeposit = (from, toPk, amount, nonce, chainId) => {
     let txData = {
         nonce: nonce,
         chainId: chainId ? chainId : CHAIN_ID,
-        initiator: Fungible.address,
+        initiateSC: Fungible.address,
         from: from.pk,
-        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [DEPOSIT, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [DEPOSIT, toPk, amount])
     }
-    let bData = getRawData(txData);
+    let bData = getRawData(txData, DEPOSIT, [toPk, amount]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
@@ -132,7 +132,7 @@ contract('SkywalkerFungible', function() {
     let fungible;
 
     let initContract = async function() {
-        let protocol = await OmniverseProtocol.new();
+        let protocol = await SkywalkerFungibleHelper.new();
         Fungible.link(protocol);
         fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
         Fungible.address = fungible.address;
@@ -186,6 +186,7 @@ contract('SkywalkerFungible', function() {
                 let nonce = await fungible.getTransactionCount(ownerPk);
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
                 let ret = await fungible.sendOmniverseTransaction(txData);
+                assert(ret.logs[0].event == 'TransactionSent');
                 let count = await fungible.getTransactionCount(ownerPk);
                 assert(count == 0, "The count should be zero");
                 await utils.sleep(COOL_DOWN);
@@ -193,7 +194,6 @@ contract('SkywalkerFungible', function() {
                 ret = await fungible.triggerExecution();
                 count = await fungible.getTransactionCount(ownerPk);
                 assert(count == 1, "The count should be one");
-                assert(ret.logs[0].event == 'TransactionSent');
             });
         });
 
@@ -224,7 +224,6 @@ contract('SkywalkerFungible', function() {
                 ret = await fungible.triggerExecution();
                 let count = await fungible.getTransactionCount(ownerPk);
                 assert(count == 2);
-                assert(ret.logs[0].event == 'TransactionSent');
             });
         });
 
@@ -244,12 +243,12 @@ contract('SkywalkerFungible', function() {
             await initContract();
         });
     
-        describe('Wrong initiator', function() {
+        describe('Wrong initiate smart contract', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
-                txData.initiator = user1;
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Wrong initiator');
+                txData.initiateSC = user1;
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Wrong initiateSC');
             });
         });
     
@@ -353,7 +352,7 @@ contract('SkywalkerFungible', function() {
                 await utils.evmMine(1);
                 let ret = await fungible.triggerExecution();
                 let o = await fungible.owner();
-                assert(ret.logs[1].event == 'OmniverseTokenTransfer');
+                assert(ret.logs[0].event == 'OmniverseTokenTransfer');
                 let balance = await fungible.omniverseBalanceOf(user1Pk);
                 assert(ONE_TOKEN == balance, 'Balance should be one');
             });
@@ -382,7 +381,7 @@ contract('SkywalkerFungible', function() {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1);
                 let ret = await fungible.triggerExecution();
-                assert(ret.logs[1].event == 'OmniverseTokenTransfer');
+                assert(ret.logs[0].event == 'OmniverseTokenTransfer');
                 let balance = await fungible.omniverseBalanceOf(user1Pk);
                 assert('0' == balance, 'Balance should be zero');
                 balance = await fungible.omniverseBalanceOf(user2Pk);
@@ -413,7 +412,7 @@ contract('SkywalkerFungible', function() {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1);
                 let ret = await fungible.triggerExecution();
-                assert(ret.logs[1].event == 'OmniverseTokenWithdraw');
+                assert(ret.logs[0].event == 'OmniverseTokenWithdraw');
                 let balance = await fungible.omniverseBalanceOf(user1Pk);
                 assert('0' == balance, 'Balance should be zero');
                 balance = await fungible.nativeBalanceOf(user1);
@@ -549,7 +548,7 @@ contract('SkywalkerFungible', function() {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1);
                 let ret = await fungible.triggerExecution();
-                assert(ret.logs[1].event == 'OmniverseTokenDeposit');
+                assert(ret.logs[0].event == 'OmniverseTokenDeposit');
                 let balance = await fungible.nativeBalanceOf(user1);
                 assert('0' == balance, 'Balance should be zero');
                 balance = await fungible.omniverseBalanceOf(user1Pk);
