@@ -49,10 +49,22 @@ let signData = (hash, sk) => {
     return '0x' + Buffer.from(signature.signature).toString('hex') + (signature.recid == 0 ? '1b' : '1c');
 }
 
-let getRawData = (txData) => {
-    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(8, '0'), 'hex'),
-    Buffer.from(txData.initiator.slice(2), 'hex'), Buffer.from(txData.from.slice(2), 'hex'), Buffer.from(new BN(txData.op).toString('hex').padStart(2, '0'), 'hex'),
-    Buffer.from(txData.data.slice(2), 'hex'), Buffer.from(new BN(txData.amount).toString('hex').padStart(32, '0'), 'hex')]);
+let getRawData = (txData, op, params) => {
+    let bData;
+    if (op == MINT) {
+        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
+    }
+    else if (op == TRANSFER) {
+        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
+    }
+    else if (op == WITHDRAW) {
+        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(new BN(params[0]).toString('hex').padStart(32, '0'), 'hex')]);
+    }
+    else if (op == DEPOSIT) {
+        bData = Buffer.concat([Buffer.from(new BN(op).toString('hex').padStart(2, '0'), 'hex'), Buffer.from(params[0].slice(2), 'hex'), Buffer.from(new BN(params[1]).toString('hex').padStart(32, '0'), 'hex')]);
+    }
+    let ret = Buffer.concat([Buffer.from(new BN(txData.nonce).toString('hex').padStart(32, '0'), 'hex'), Buffer.from(new BN(txData.chainId).toString('hex').padStart(2, '0'), 'hex'),
+        Buffer.from(txData.from.slice(2), 'hex'), Buffer.from(txData.initiator.slice(2), 'hex'), bData]);
     return ret;
 }
 
@@ -62,9 +74,7 @@ let encodeMint = (from, toPk, amount, nonce) => {
         chainId: CHAIN_ID,
         initiator: Fungible.address,
         from: from.pk,
-        op: MINT,
-        data: toPk,
-        amount: amount,
+        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, toPk, amount])
     }
     let bData = getRawData(txData);
     let hash = keccak256(bData);
@@ -78,9 +88,7 @@ let encodeTransfer = (from, toPk, amount, nonce) => {
         chainId: CHAIN_ID,
         initiator: Fungible.address,
         from: from.pk,
-        op: TRANSFER,
-        data: toPk,
-        amount: amount,
+        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, toPk, amount])
     }
     let bData = getRawData(txData);
     let hash = keccak256(bData);
@@ -94,9 +102,7 @@ let encodeWithdraw = (from, amount, nonce, chainId) => {
         chainId: chainId ? chainId : CHAIN_ID,
         initiator: Fungible.address,
         from: from.pk,
-        op: WITHDRAW,
-        data: '0x',
-        amount: amount,
+        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [WITHDRAW, '0x', amount])
     }
     let bData = getRawData(txData);
     let hash = keccak256(bData);
@@ -110,9 +116,7 @@ let encodeDeposit = (from, toPk, amount, nonce, chainId) => {
         chainId: chainId ? chainId : CHAIN_ID,
         initiator: Fungible.address,
         from: from.pk,
-        op: DEPOSIT,
-        data: toPk,
-        amount: amount,
+        data: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [DEPOSIT, toPk, amount])
     }
     let bData = getRawData(txData);
     let hash = keccak256(bData);

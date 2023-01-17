@@ -14,6 +14,26 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     uint8 constant WITHDRAW = 4;
 
     /**
+     * @dev Fungible token data structure, which will be encoded from
+     * or decoded from the field `data` of `OmniverseTransactionData`
+     *
+     * op: The operation type
+     * param: The operation data
+     * amount: The amount of token which is operated
+     *
+     * NOTE op: 0-31 are reserved values, 32-255 are custom values
+     * 
+     * op: 0 Transfers omniverse token `amount` from user `from` to user `param`, `from` MUST have at least `amount` token
+     * op: 1 User `from` mints token `amount` to user `param`
+     * op: 2 User `from` burns token `amount` from user `param`
+     */
+    struct Fungible {
+        uint8 op;
+        bytes param;
+        uint256 amount;
+    }
+
+    /**
      * @dev Deposit request information
      * receiver: The target of deposit
      * amount: The amount of deposit
@@ -125,19 +145,19 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
             emit TransactionSent(txData.from, txData.nonce);
         }
 
-        uint8 op = txData.op;
-        if (op == WITHDRAW) {
-            _omniverseWithdraw(txData.from, txData.amount, txData.chainId == chainId);
+        Fungible memory fungible = _decodeData(txData.data);
+        if (fungible.op == WITHDRAW) {
+            _omniverseWithdraw(txData.from, fungible.amount, txData.chainId == chainId);
         }
-        else if (op == TRANSFER) {
-            _omniverseTransfer(txData.from, txData.data, txData.amount);
+        else if (fungible.op == TRANSFER) {
+            _omniverseTransfer(txData.from, fungible.param, fungible.amount);
         }
-        else if (op == DEPOSIT) {
-            _omniverseDeposit(txData.from, txData.data, txData.amount);
+        else if (fungible.op == DEPOSIT) {
+            _omniverseDeposit(txData.from, fungible.param, fungible.amount);
         }
-        else if (op == MINT) {
+        else if (fungible.op == MINT) {
             _checkOwner(txData.from);
-            _omniverseMint(txData.data, txData.amount);
+            _omniverseMint(fungible.param, fungible.amount);
         }
     }
     
@@ -145,16 +165,16 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
      * @dev Check if the transaction can be executed successfully
      */
     function _checkExecution(OmniverseTransactionData memory txData) internal view {
-        uint8 op = txData.op;
-        if (op == WITHDRAW) {
-            _checkOmniverseWithdraw(txData.from, txData.amount);
+        Fungible memory fungible = _decodeData(txData.data);
+        if (fungible.op == WITHDRAW) {
+            _checkOmniverseWithdraw(txData.from, fungible.amount);
         }
-        else if (op == TRANSFER) {
-            _checkOmniverseTransfer(txData.from, txData.amount);
+        else if (fungible.op == TRANSFER) {
+            _checkOmniverseTransfer(txData.from, fungible.amount);
         }
-        else if (op == DEPOSIT) {
+        else if (fungible.op == DEPOSIT) {
         }
-        else if (op == MINT) {
+        else if (fungible.op == MINT) {
             _checkOwner(txData.from);
         }
         else {
@@ -283,6 +303,18 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
+     * @dev Encode 
+     */
+    function _encodeData(Fungible memory _fungible) internal pure returns (bytes memory) {
+        return abi.encode(_fungible.op, _fungible.param, _fungible.amount);
+    }
+
+    function _decodeData(bytes memory _data) internal pure returns (Fungible memory) {
+        (uint8 op, bytes memory param, uint256 amount) = abi.decode(_data, (uint8, bytes, uint256));
+        return Fungible(op, param, amount);
+    }
+
+    /**
      * @dev Execute an omniverse withdraw operation
      */
     function _omniverseWithdraw(bytes memory _from, uint256 _amount, bool _thisChain) internal {
@@ -404,9 +436,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
         p.from = committee;
         p.initiator = abi.encodePacked(address(this));
         p.signature = signature;
-        p.op = DEPOSIT;
-        p.data = request.receiver;
-        p.amount = request.amount;
+        p.data = _encodeData(Fungible(DEPOSIT, request.receiver, request.amount));
         _omniverseTransaction(p);
     }
 

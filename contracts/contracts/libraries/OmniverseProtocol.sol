@@ -28,7 +28,7 @@ library OmniverseProtocol {
      * @dev Get the hash of a transaction
      */
     function getTransactionHash(OmniverseTransactionData memory _data) public pure returns (bytes32) {
-        bytes memory rawData = abi.encodePacked(uint128(_data.nonce), _data.chainId, _data.initiator, _data.from, _data.op, _data.data, uint128(_data.amount));
+        bytes memory rawData = abi.encodePacked(_data.nonce, _data.chainId, _data.initiator, _data.from, _data.data);
         return keccak256(rawData);
     }
 

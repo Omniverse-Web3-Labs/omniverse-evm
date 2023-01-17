@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../OmniverseTransactionDataNFT.sol";
+import "../OmniverseTransactionData.sol";
 
-interface IOmniverseFungible {
+interface IOmniverseTransaction {
     /**
      * @dev Emitted when a transaction which has nonce `nonce` and was signed by user `pk` is executed
      */
@@ -14,6 +14,8 @@ interface IOmniverseFungible {
      * NOTE The transaction MUST be deferred executed, and the developer should implement a trigger mechanism
      * @param _data Omniverse transaction data
      * See more information in OmniverseTransactionData.sol
+     *
+     * Emit a {TransactionSent} event
      */
     function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external;
 
@@ -34,16 +36,4 @@ interface IOmniverseFungible {
      * @dev Returns the chain ID
      */
     function getChainId() external view returns (uint32);
-
-    /**
-     * @dev Returns the omniverse balance of a user `_pk`
-     * @param _pk Omniverse account to be queried
-     */
-    function omniverseBalanceOf(bytes calldata _pk) external view returns (uint256);
-
-    /**
-     * @dev Returns the owner of a token `tokenId`
-     * @param _tokenId Omniverse token id to be queried
-     */
-    function omniverseOwnerOf(uint256 _tokenId) external view returns (bytes memory);
 }
