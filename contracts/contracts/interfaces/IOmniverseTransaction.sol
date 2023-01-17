@@ -3,6 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "../OmniverseTransactionData.sol";
 
+/**
+ * @dev Interface of the omniverse DLT
+ */
 interface IOmniverseTransaction {
     /**
      * @dev Emitted when a transaction which has nonce `nonce` and was signed by user `pk` is executed

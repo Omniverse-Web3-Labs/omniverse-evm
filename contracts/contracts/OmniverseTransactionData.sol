@@ -10,15 +10,13 @@ pragma solidity >=0.8.0 <0.9.0;
  * @Member payload: The encoded bussiness logic data, which is maintained by the developer
  * NOTE Take {SkywalkerFungibleHelper.sol - Fungible} for example
  * @Member signature: The signature of the above informations. 
- *                    Firstly, the above sectors are combined as 
- *                    `bytes memory rawData = abi.encodePacked(o.nonce, o.chainId, o.initiator, o.from, rawPayload);`,
- *                    where the `o` is an instance of the struct, and the `rawPayload` which is used to
- *                    compute the `rawData` is derived from `payload`. The `rawPayload` may be the same as `payload`,
- *                    it depends on the system design scheme.
- *                    Take {SkywalkerFungibleHelper.sol - SkywalkerFungibleHelper - getTransactionHash} for example
- *                    Secondly, the raw data is hashed by `bytes32 hash = keccak256(rawData)`
- *                    Thirdly, sign the hash and set the signature to the field `signature`.
- * 
+ * NOTE Firstly, the above sectors are combined as:
+ * `bytes memory rawData = abi.encodePacked(o.nonce, o.chainId, o.initiator, o.from, rawPayload);`,
+ * where the `o` is an instance of the struct, and the `rawPayload` which is used to compute the `rawData`
+ * is derived from `payload`. The `rawPayload` may be the same as `payload`, it depends on the system design scheme.
+ * Take {SkywalkerFungibleHelper.sol - SkywalkerFungibleHelper - getTransactionHash} for example
+ * Secondly, the raw data is hashed by `bytes32 hash = keccak256(rawData)`
+ * Thirdly, sign the hash and set the signature to the field `signature`.
  */
 struct OmniverseTransactionData {
     uint128 nonce;

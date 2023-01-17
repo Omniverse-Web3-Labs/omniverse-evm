@@ -3,6 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "./IOmniverseTransaction.sol";
 
+/**
+ * @dev Interface of the omniverse fungible token, which inherits {IOmniverseTransaction}
+ */
 interface IOmniverseFungible is IOmniverseTransaction {
     /**
      * @dev Returns the omniverse balance of a user `_pk`
