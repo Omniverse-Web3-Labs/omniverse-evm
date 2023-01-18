@@ -3,9 +3,12 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC20.sol";
-import "./libraries/OmniverseProtocol.sol";
+import "./libraries/SkywalkerFungibleHelper.sol";
 import "./interfaces/IOmniverseFungible.sol";
 
+/**
+ * @dev Implementation of the {IOmniverseFungible} interface
+ */
 contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     uint8 constant TRANSFER = 0;
     uint8 constant MINT = 1;
@@ -121,23 +124,20 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
         // Add to transaction recorder
         RecordedCertificate storage rc = transactionRecorder[txData.from];
         rc.txList.push(cache);
-        if (txData.chainId == chainId) {
-            emit TransactionSent(txData.from, txData.nonce);
-        }
 
-        uint8 op = txData.op;
-        if (op == WITHDRAW) {
-            _omniverseWithdraw(txData.from, txData.amount, txData.chainId == chainId);
+        Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
+        if (fungible.op == WITHDRAW) {
+            _omniverseWithdraw(txData.from, fungible.amount, txData.chainId == chainId);
         }
-        else if (op == TRANSFER) {
-            _omniverseTransfer(txData.from, txData.data, txData.amount);
+        else if (fungible.op == TRANSFER) {
+            _omniverseTransfer(txData.from, fungible.exData, fungible.amount);
         }
-        else if (op == DEPOSIT) {
-            _omniverseDeposit(txData.from, txData.data, txData.amount);
+        else if (fungible.op == DEPOSIT) {
+            _omniverseDeposit(txData.from, fungible.exData, fungible.amount);
         }
-        else if (op == MINT) {
+        else if (fungible.op == MINT) {
             _checkOwner(txData.from);
-            _omniverseMint(txData.data, txData.amount);
+            _omniverseMint(fungible.exData, fungible.amount);
         }
     }
     
@@ -145,16 +145,16 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
      * @dev Check if the transaction can be executed successfully
      */
     function _checkExecution(OmniverseTransactionData memory txData) internal view {
-        uint8 op = txData.op;
-        if (op == WITHDRAW) {
-            _checkOmniverseWithdraw(txData.from, txData.amount);
+        Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
+        if (fungible.op == WITHDRAW) {
+            _checkOmniverseWithdraw(txData.from, fungible.amount);
         }
-        else if (op == TRANSFER) {
-            _checkOmniverseTransfer(txData.from, txData.amount);
+        else if (fungible.op == TRANSFER) {
+            _checkOmniverseTransfer(txData.from, fungible.amount);
         }
-        else if (op == DEPOSIT) {
+        else if (fungible.op == DEPOSIT) {
         }
-        else if (op == MINT) {
+        else if (fungible.op == MINT) {
             _checkOwner(txData.from);
         }
         else {
@@ -214,22 +214,22 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
      * @dev Receive and check an omniverse transaction
      */
     function _omniverseTransaction(OmniverseTransactionData memory _data) internal {
-        // Check if the tx initiator is correct
+        // Check if the tx initiateSC is correct
         bool found = false;
         for (uint256 i = 0; i < members.length; i++) {
             if (members[i].chainId == _data.chainId) {
-                require(keccak256(members[i].contractAddr) == keccak256(_data.initiator), "Wrong initiator");
+                require(keccak256(members[i].contractAddr) == keccak256(_data.initiateSC), "Wrong initiateSC");
                 found = true;
             }
         }
-        require(found, "Wrong initiator");
+        require(found, "Wrong initiateSC");
 
         // Check if the sender is honest
         // to be continued, we can use block list instead of `isMalicious`
         require(!isMalicious(_data.from), "User malicious");
 
         // Verify the signature
-        VerifyResult verifyRet = OmniverseProtocol.verifyTransaction(transactionRecorder[_data.from], _data);
+        VerifyResult verifyRet = SkywalkerFungibleHelper.verifyTransaction(transactionRecorder[_data.from], _data);
 
         if (verifyRet == VerifyResult.Success) {
             // Check cache
@@ -241,6 +241,9 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
             cache.txData = _data;
             cache.timestamp = block.timestamp;
             delayedTxs.push(DelayedTx(_data.from, _data.nonce));
+            if (_data.chainId == chainId) {
+                emit TransactionSent(_data.from, _data.nonce);
+            }
         }
         else if (verifyRet == VerifyResult.Malicious) {
             // Slash
@@ -392,7 +395,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     /**
      * @dev The committee approves a user's request
      */
-    function approveDeposit(uint256 index, uint256 nonce, bytes calldata signature) external onlyCommittee {
+    function approveDeposit(uint256 index, uint128 nonce, bytes calldata signature) external onlyCommittee {
         require(index == depositDealingIndex, "Index error");
 
         DepositRequest storage request = depositRequests[index];
@@ -402,11 +405,9 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
         p.nonce = nonce;
         p.chainId = chainId;
         p.from = committee;
-        p.initiator = abi.encodePacked(address(this));
+        p.initiateSC = abi.encodePacked(address(this));
         p.signature = signature;
-        p.op = DEPOSIT;
-        p.data = request.receiver;
-        p.amount = request.amount;
+        p.payload = SkywalkerFungibleHelper.encodeData(Fungible(DEPOSIT, request.receiver, request.amount));
         _omniverseTransaction(p);
     }
 
