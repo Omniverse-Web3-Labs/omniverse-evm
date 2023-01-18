@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "../OmniverseTransactionData.sol";
 
 /**
- * @dev Fungible token data structure, which will be encoded from or decoded from
+ * @notice Fungible token data structure, which will be encoded from or decoded from
  * the field `payload` of `OmniverseTransactionData`
  *
  * op: The operation type
@@ -22,7 +22,7 @@ struct Fungible {
 }
 
 /**
- * @dev Used to record one omniverse transaction data
+ * @notice Used to record one omniverse transaction data
  * txData: The original omniverse transaction data committed to the contract
  * timestamp: When the omniverse transaction data is committed
  */
@@ -32,7 +32,7 @@ struct OmniverseTx {
 }
 
 /**
- * @dev An malicious omniverse transaction data
+ * @notice An malicious omniverse transaction data
  * oData: The recorded omniverse transaction data
  * hisNonce: The nonce of the historical transaction which it conflicts with
  */
@@ -42,7 +42,7 @@ struct EvilTxData {
 }
 
 /**
- * @dev Used to record the historical omniverse transactions of a user
+ * @notice Used to record the historical omniverse transactions of a user
  * txList: Successful historical omniverse transaction list
  * evilTxList: Malicious historical omniverse transaction list
  */
@@ -58,21 +58,21 @@ enum VerifyResult {
 }
 
 /**
- * @dev The library is mainly responsible for omniverse transaction verification and
+ * @notice The library is mainly responsible for omniverse transaction verification and
  * provides some basic methods.
  * NOTE The verification method is for reference only, and developers can design appropriate
  * verification mechanism based on their bussiness logic.
  */
 library SkywalkerFungibleHelper {
     /**
-     * @dev Encode `_fungible` into bytes
+     * @notice Encode `_fungible` into bytes
      */
     function encodeData(Fungible memory _fungible) internal pure returns (bytes memory) {
         return abi.encode(_fungible.op, _fungible.exData, _fungible.amount);
     }
 
     /**
-     * @dev Decode `_data` from bytes to Fungible
+     * @notice Decode `_data` from bytes to Fungible
      */
     function decodeData(bytes memory _data) internal pure returns (Fungible memory) {
         (uint8 op, bytes memory exData, uint256 amount) = abi.decode(_data, (uint8, bytes, uint256));
@@ -80,7 +80,7 @@ library SkywalkerFungibleHelper {
     }
     
     /**
-     * @dev Get the hash of a transaction
+     * @notice Get the hash of a transaction
      */
     function getTransactionHash(OmniverseTransactionData memory _data) public pure returns (bytes32) {
         Fungible memory fungible = decodeData(_data.payload);
@@ -90,7 +90,7 @@ library SkywalkerFungibleHelper {
     }
 
     /**
-     * @dev Recover the address
+     * @notice Recover the address
      */
     function recoverAddress(bytes32 _hash, bytes memory _signature) public pure returns (address) {
         uint8 v;
@@ -107,7 +107,7 @@ library SkywalkerFungibleHelper {
     }
 
     /**
-     * @dev Check if the public key matches the recovered address
+     * @notice Check if the public key matches the recovered address
      */
     function checkPkMatched(bytes memory _pk, address _address) public pure {
         bytes32 hash = keccak256(_pk);
@@ -116,7 +116,7 @@ library SkywalkerFungibleHelper {
     }
 
     /**
-     * @dev Verify an omniverse transaction
+     * @notice Verify an omniverse transaction
      */
     function verifyTransaction(RecordedCertificate storage rc, OmniverseTransactionData memory _data) public returns (VerifyResult) {
         uint256 nonce = rc.txList.length;

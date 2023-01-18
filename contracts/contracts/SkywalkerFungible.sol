@@ -7,14 +7,14 @@ import "./libraries/SkywalkerFungibleHelper.sol";
 import "./interfaces/IERCOmniverseFungible.sol";
 
 /**
- * @dev Implementation of the {IERCOmniverseFungible} interface
+ * @notice Implementation of the {IERCOmniverseFungible} interface
  */
 contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     uint8 constant TRANSFER = 0;
     uint8 constant MINT = 1;
     uint8 constant BURN = 2;
 
-    /** @dev Used to index a delayed transaction
+    /** @notice Used to index a delayed transaction
      * sender: The account which sent the transaction
      * nonce: The nonce of the delayed transaction
      */
@@ -24,7 +24,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev The member information
+     * @notice The member information
      * chainId: The chain which the member belongs to
      * contractAddr: The contract address on the member chain
      */
@@ -54,7 +54,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     event OmniverseTokenTransfer(bytes from, bytes to, uint256 value);
 
     /**
-     * @dev Initiates the contract
+     * @notice Initiates the contract
      * @param _chainId The chain which the contract is deployed on
      * @param _name The name of the token
      * @param _symbol The symbol of the token
@@ -64,7 +64,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev See {IERCOmniverseFungible-sendOmniverseTransaction}
+     * @notice See {IERCOmniverseFungible-sendOmniverseTransaction}
      * Send an omniverse transaction
      */
     function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external override {
@@ -72,7 +72,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev See {IERCOmniverseFungible-triggerExecution}
+     * @notice See {IERCOmniverseFungible-triggerExecution}
      */
     function triggerExecution() external {
         require(delayedTxs.length > 0, "No delayed tx");
@@ -105,7 +105,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
     
     /**
-     * @dev Check if the transaction can be executed successfully
+     * @notice Check if the transaction can be executed successfully
      */
     function _checkExecution(OmniverseTransactionData memory txData) internal view {
         Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
@@ -125,7 +125,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Returns the nearest exexutable delayed transaction info
+     * @notice Returns the nearest exexutable delayed transaction info
      * or returns default if not found
      */
     function getExecutableDelayedTx() external view returns (DelayedTx memory ret) {
@@ -138,14 +138,14 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Returns the count of delayed transactions
+     * @notice Returns the count of delayed transactions
      */
     function getDelayedTxCount() external view returns (uint256) {
         return delayedTxs.length;
     }
 
     /**
-     * @dev See {IERCOmniverseFungible-omniverseBalanceOf}
+     * @notice See {IERCOmniverseFungible-omniverseBalanceOf}
      * Returns the omniverse balance of a user
      */
     function omniverseBalanceOf(bytes calldata _pk) external view override returns (uint256) {
@@ -153,7 +153,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev See {IERC20-balanceOf}.
+     * @notice See {IERC20-balanceOf}.
      */
     function balanceOf(address account) public view virtual override returns (uint256) {
         bytes storage pk = accountsMap[account];
@@ -166,7 +166,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Receive and check an omniverse transaction
+     * @notice Receive and check an omniverse transaction
      */
     function _omniverseTransaction(OmniverseTransactionData memory _data) internal {
         // Check if the tx initiateSC is correct
@@ -206,7 +206,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Check if an omniverse transfer operation can be executed successfully
+     * @notice Check if an omniverse transfer operation can be executed successfully
      */
     function _checkOmniverseTransfer(bytes memory _from, uint256 _amount) internal view {
         uint256 fromBalance = omniverseBalances[_from];
@@ -214,7 +214,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Exucute an omniverse transfer operation
+     * @notice Exucute an omniverse transfer operation
      */
     function _omniverseTransfer(bytes memory _from, bytes memory _to, uint256 _amount) internal {
         _checkOmniverseTransfer(_from, _amount);
@@ -233,7 +233,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
     
     /**
-     * @dev Check if the public key is the owner
+     * @notice Check if the public key is the owner
      */
     function _checkOwner(bytes memory _pk) internal view {
         address fromAddr = _pkToAddress(_pk);
@@ -241,7 +241,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Execute an omniverse mint operation
+     * @notice Execute an omniverse mint operation
      */
     function _omniverseMint(bytes memory _to, uint256 _amount) internal {
         omniverseBalances[_to] += _amount;
@@ -252,7 +252,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Check if an omniverse burn operation can be executed successfully
+     * @notice Check if an omniverse burn operation can be executed successfully
      */
     function _checkOmniverseBurn(bytes memory _from, uint256 _amount) internal view {
         uint256 fromBalance = omniverseBalances[_from];
@@ -260,7 +260,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Execute an omniverse burn operation
+     * @notice Execute an omniverse burn operation
      */
     function _omniverseBurn(bytes memory _from, uint256 _amount) internal {
         omniverseBalances[_from] -= _amount;
@@ -268,7 +268,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Convert the public key to evm address
+     * @notice Convert the public key to evm address
      */
     function _pkToAddress(bytes memory _pk) internal pure returns (address) {
         bytes32 hash = keccak256(_pk);
@@ -276,7 +276,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Add new chain members to the token
+     * @notice Add new chain members to the token
      */
     function setMembers(Member[] calldata _members) external onlyOwner {
         for (uint256 i = 0; i < _members.length; i++) {
@@ -294,28 +294,28 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Returns chain members of the token
+     * @notice Returns chain members of the token
      */
     function getMembers() external view returns (Member[] memory) {
         return members;
     }
     
     /**
-     @dev See {IERC20-decimals}.
+     @notice See {IERC20-decimals}.
      */
     function decimals() public view virtual override returns (uint8) {
         return 12;
     }
 
     /**
-     * @dev See IERCOmniverseFungible
+     * @notice See IERCOmniverseFungible
      */
     function getTransactionCount(bytes memory _pk) external override view returns (uint256) {
         return transactionRecorder[_pk].txList.length;
     }
 
     /**
-     * @dev See IERCOmniverseFungible
+     * @notice See IERCOmniverseFungible
      */
     function getTransactionData(bytes calldata _user, uint256 _nonce) external override view returns (OmniverseTransactionData memory txData, uint256 timestamp) {
         RecordedCertificate storage rc = transactionRecorder[_user];
@@ -325,14 +325,14 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev Set the cooling down time of an omniverse transaction
+     * @notice Set the cooling down time of an omniverse transaction
      */
     function setCooingDownTime(uint256 _time) external {
         cdTime = _time;
     }
 
     /**
-     * @dev Index the user is malicious or not
+     * @notice Index the user is malicious or not
      */
     function isMalicious(bytes memory _pk) public view returns (bool) {
         RecordedCertificate storage rc = transactionRecorder[_pk];
@@ -340,7 +340,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @dev See IERCOmniverseFungible
+     * @notice See IERCOmniverseFungible
      */
     function getChainId() external view returns (uint32) {
         return chainId;
