@@ -4,12 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC20.sol";
 import "./libraries/SkywalkerFungibleHelper.sol";
-import "./interfaces/IOmniverseFungible.sol";
+import "./interfaces/IERCOmniverseFungible.sol";
 
 /**
- * @dev Implementation of the {IOmniverseFungible} interface
+ * @dev Implementation of the {IERCOmniverseFungible} interface
  */
-contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
+contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     uint8 constant TRANSFER = 0;
     uint8 constant MINT = 1;
     uint8 constant BURN = 2;
@@ -64,7 +64,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev See {IOmniverseFungible-sendOmniverseTransaction}
+     * @dev See {IERCOmniverseFungible-sendOmniverseTransaction}
      * Send an omniverse transaction
      */
     function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external override {
@@ -72,7 +72,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev See {IOmniverseFungible-triggerExecution}
+     * @dev See {IERCOmniverseFungible-triggerExecution}
      */
     function triggerExecution() external {
         require(delayedTxs.length > 0, "No delayed tx");
@@ -145,7 +145,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev See {IOmniverseFungible-omniverseBalanceOf}
+     * @dev See {IERCOmniverseFungible-omniverseBalanceOf}
      * Returns the omniverse balance of a user
      */
     function omniverseBalanceOf(bytes calldata _pk) external view override returns (uint256) {
@@ -308,14 +308,14 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev See IOmniverseFungible
+     * @dev See IERCOmniverseFungible
      */
     function getTransactionCount(bytes memory _pk) external override view returns (uint256) {
         return transactionRecorder[_pk].txList.length;
     }
 
     /**
-     * @dev See IOmniverseFungible
+     * @dev See IERCOmniverseFungible
      */
     function getTransactionData(bytes calldata _user, uint256 _nonce) external override view returns (OmniverseTransactionData memory txData, uint256 timestamp) {
         RecordedCertificate storage rc = transactionRecorder[_user];
@@ -340,7 +340,7 @@ contract SkywalkerFungible is ERC20, Ownable, IOmniverseFungible {
     }
 
     /**
-     * @dev See IOmniverseFungible
+     * @dev See IERCOmniverseFungible
      */
     function getChainId() external view returns (uint32) {
         return chainId;
