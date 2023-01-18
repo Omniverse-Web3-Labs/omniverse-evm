@@ -6,7 +6,7 @@ import "../OmniverseTransactionData.sol";
 /**
  * @dev Interface of the omniverse DLT
  */
-interface IOmniverseTransaction {
+interface IERCOmniverse {
     /**
      * @dev Emitted when a transaction which has nonce `nonce` and was signed by user `pk` is executed
      */

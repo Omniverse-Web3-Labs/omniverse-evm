@@ -6,7 +6,7 @@ import "./IOmniverseTransaction.sol";
 /**
  * @dev Interface of the omniverse fungible token, which inherits {IOmniverseTransaction}
  */
-interface IOmniverseFungible is IOmniverseTransaction {
+interface IERCOmniverseFungible is IERCOmniverse {
     /**
      * @dev Returns the omniverse balance of a user `_pk`
      * @param _pk Omniverse account to be queried
