@@ -15,11 +15,11 @@ interface IERCOmniverse {
     /**
      * @notice Sends an omniverse transaction 
      * @dev 
-     * Note: MUST implement the validation of the signature in `_data.signature`
-     * Note: A map maintaining the omniverse accounts and their transaction nonces is RECOMMENDED 
-     * Note: MUST implement the validation of the nonce in `_data.nonce` according to the current account nonce
-     * Note: MUST implement the validation of the payload data
-     * Note: This interface is just for sending of an omniverse transaction, and the execution MUST NOT be within this interface 
+     * Note: MUST implement the validation of the `_data.signature`
+     * Note: A map maintaining the omniverse account and the related transaction nonce is RECOMMENDED  
+     * Note: MUST implement the validation of the `_data.nonce` according to the current account nonce
+     * Note: MUST implement the validation of the `_data. payload`
+     * Note: This interface is just for sending an omniverse transaction, and the execution MUST NOT be within this interface 
      * Note: The actual execution of an omniverse transaction is RECOMMENDED to be in another function and MAY be delayed for a time,
      * which is determined all by who publishes an O-DLT token
      * @param _data: the omniverse transaction data with type {OmniverseTransactionData}

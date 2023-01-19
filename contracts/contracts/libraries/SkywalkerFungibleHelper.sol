@@ -4,16 +4,17 @@ pragma solidity >=0.8.0 <0.9.0;
 import "../OmniverseTransactionData.sol";
 
 /**
- * @notice Fungible token data structure, which will be encoded from or decoded from
- * the field `payload` of `OmniverseTransactionData`
- *
- * op: The operation type
- * NOTE op: 0-31 are reserved values, 32-255 are custom values
- *             op: 0 Transfers omniverse token `amount` from user `from` to user `exData`, `from` MUST have at least `amount` token
- *             op: 1 User `from` mints token `amount` to user `exData`
- *             op: 2 User `from` burns token `amount` from user `exData`
- * exData: The operation data. This sector could be empty and is determined by `op`
- * amount: The amount of token which is operated
+* @notice Fungible token data structure, from which the field `payload` in `OmniverseTransactionData` will be encoded
+*
+* @member op: The operation type
+* NOTE op: 0-31 are reserved values, 32-255 are custom values
+*           op: 0 - omniverse account `from` transfers `amount` tokens to omniverse account `exData`, `from` have at least `amount` tokens
+*           op: 1 - omniverse account `from` mints `amount` tokens to omniverse account `exData`
+*           op: 2 - omniverse account `from` burns `amount` tokens from his own, `from` have at least `amount` tokens
+* @member exData: The operation data. This sector could be empty and is determined by `op`. For example: 
+            when `op` is 0 and 1, `exData` stores the omniverse account that receives.
+            when `op` is 2, `exData` is empty.
+* @member amount: The amount of tokens being operated
  */
 struct Fungible {
     uint8 op;
