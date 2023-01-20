@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../OmniverseTransactionData.sol";
+import "../interfaces/IERC6358.sol";
 
 /**
-* @notice Fungible token data structure, from which the field `payload` in `OmniverseTransactionData` will be encoded
+* @notice Fungible token data structure, from which the field `payload` in `ERC6358TransactionData` will be encoded
 *
 * @member op: The operation type
 * NOTE op: 0-31 are reserved values, 32-255 are custom values
@@ -28,7 +28,7 @@ struct Fungible {
  * timestamp: When the omniverse transaction data is committed
  */
 struct OmniverseTx {
-    OmniverseTransactionData txData;
+    ERC6358TransactionData txData;
     uint256 timestamp;
 }
 
@@ -83,7 +83,7 @@ library SkywalkerFungibleHelper {
     /**
      * @notice Get the hash of a transaction
      */
-    function getTransactionHash(OmniverseTransactionData memory _data) public pure returns (bytes32) {
+    function getTransactionHash(ERC6358TransactionData memory _data) public pure returns (bytes32) {
         Fungible memory fungible = decodeData(_data.payload);
         bytes memory payload = abi.encodePacked(fungible.op, fungible.exData, uint128(fungible.amount));
         bytes memory rawData = abi.encodePacked(_data.nonce, _data.chainId, _data.initiateSC, _data.from, payload);
@@ -119,7 +119,7 @@ library SkywalkerFungibleHelper {
     /**
      * @notice Verify an omniverse transaction
      */
-    function verifyTransaction(RecordedCertificate storage rc, OmniverseTransactionData memory _data) public returns (VerifyResult) {
+    function verifyTransaction(RecordedCertificate storage rc, ERC6358TransactionData memory _data) public returns (VerifyResult) {
         uint256 nonce = rc.txList.length;
         
         bytes32 txHash = getTransactionHash(_data);

@@ -4,12 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC20.sol";
 import "./libraries/SkywalkerFungibleHelper.sol";
-import "./interfaces/IERCOmniverseFungible.sol";
+import "./interfaces/IERC6358Fungible.sol";
 
 /**
- * @notice Implementation of the {IERCOmniverseFungible} interface
+ * @notice Implementation of the {IERC6358Fungible} interface
  */
-contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
+contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     uint8 constant TRANSFER = 0;
     uint8 constant MINT = 1;
     uint8 constant BURN = 2;
@@ -64,15 +64,15 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @notice See {IERCOmniverseFungible-sendOmniverseTransaction}
+     * @notice See {IERC6358Fungible-sendOmniverseTransaction}
      * Send an omniverse transaction
      */
-    function sendOmniverseTransaction(OmniverseTransactionData calldata _data) external override {
+    function sendOmniverseTransaction(ERC6358TransactionData calldata _data) external override {
         _omniverseTransaction(_data);
     }
 
     /**
-     * @notice See {IERCOmniverseFungible-triggerExecution}
+     * @notice See {IERC6358Fungible-triggerExecution}
      */
     function triggerExecution() external {
         require(delayedTxs.length > 0, "No delayed tx");
@@ -80,7 +80,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
         OmniverseTx storage cache = transactionCache[delayedTxs[0].sender];
         require(cache.timestamp != 0, "Not cached");
         require(cache.txData.nonce == delayedTxs[0].nonce, "Nonce error");
-        (OmniverseTransactionData storage txData, uint256 timestamp) = (cache.txData, cache.timestamp);
+        (ERC6358TransactionData storage txData, uint256 timestamp) = (cache.txData, cache.timestamp);
         require(block.timestamp >= timestamp + cdTime, "Not executable");
         delayedTxs[0] = delayedTxs[delayedTxs.length - 1];
         delayedTxs.pop();
@@ -107,7 +107,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     /**
      * @notice Check if the transaction can be executed successfully
      */
-    function _checkExecution(OmniverseTransactionData memory txData) internal view {
+    function _checkExecution(ERC6358TransactionData memory txData) internal view {
         Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
         if (fungible.op == TRANSFER) {
             _checkOmniverseTransfer(txData.from, fungible.amount);
@@ -145,7 +145,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @notice See {IERCOmniverseFungible-omniverseBalanceOf}
+     * @notice See {IERC6358Fungible-omniverseBalanceOf}
      * Returns the omniverse balance of a user
      */
     function omniverseBalanceOf(bytes calldata _pk) external view override returns (uint256) {
@@ -168,7 +168,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     /**
      * @notice Receive and check an omniverse transaction
      */
-    function _omniverseTransaction(OmniverseTransactionData memory _data) internal {
+    function _omniverseTransaction(ERC6358TransactionData memory _data) internal {
         // Check if the tx initiateSC is correct
         bool found = false;
         for (uint256 i = 0; i < members.length; i++) {
@@ -308,16 +308,16 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @notice See IERCOmniverseFungible
+     * @notice See IERC6358Fungible
      */
     function getTransactionCount(bytes memory _pk) external override view returns (uint256) {
         return transactionRecorder[_pk].txList.length;
     }
 
     /**
-     * @notice See IERCOmniverseFungible
+     * @notice See IERC6358Fungible
      */
-    function getTransactionData(bytes calldata _user, uint256 _nonce) external override view returns (OmniverseTransactionData memory txData, uint256 timestamp) {
+    function getTransactionData(bytes calldata _user, uint256 _nonce) external override view returns (ERC6358TransactionData memory txData, uint256 timestamp) {
         RecordedCertificate storage rc = transactionRecorder[_user];
         OmniverseTx storage omniTx = rc.txList[_nonce];
         txData = omniTx.txData;
@@ -340,7 +340,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERCOmniverseFungible {
     }
 
     /**
-     * @notice See IERCOmniverseFungible
+     * @notice See IERC6358Fungible
      */
     function getChainId() external view returns (uint32) {
         return chainId;
