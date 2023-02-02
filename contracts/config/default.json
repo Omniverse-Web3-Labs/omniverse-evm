@@ -2,12 +2,16 @@
 	"BSCTEST": {
 		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
 		"chainId": 97,
-		"omniverseProtocolAddress": "0x3635051649436c3d8c4a531B36a89916559Ab501",
-		"skywalkerFungibleAddressX": "0xAa83D30838531152E01135f8f171264812226293",
-		"skywalkerFungibleAddressY": "0xC6E7c04738c519D475BE546938dC831fA63268b4",
 		"coolingDown": 10,
-		"omniverseChainId": 0,
-		"skywalkerFungibleAddress": "0xAa83D30838531152E01135f8f171264812226293"
+		"skywalkerFungibleAddress": "0xf9E5f797f88a8B42ad9960f3411145857cf1109f",
+		"omniverseChainId": 0
+	},
+	"MOCK": {
+		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
+		"chainId": 97,
+		"coolingDown": 10,
+		"skywalkerFungibleAddress": "0x646fE2Cfd2e2942aA67C74DAe58BD1410E2c622E",
+		"omniverseChainId": 10000
 	},
 	"PLATONEVMDEV": {
 		"nodeAddress": "https://devnet2openapi.platon.network/rpc",
@@ -16,7 +20,6 @@
 		"skywalkerFungibleAddressX": "0x9c7d688BdFB148cb69A206AB32bf22f2Fd46e1fe",
 		"skywalkerFungibleAddressY": "0xC6E7c04738c519D475BE546938dC831fA63268b4",
 		"coolingDown": 10,
-		"omniverseChainId": 2,
 		"skywalkerFungibleAddress": "0x9c7d688BdFB148cb69A206AB32bf22f2Fd46e1fe"
 	}
 }

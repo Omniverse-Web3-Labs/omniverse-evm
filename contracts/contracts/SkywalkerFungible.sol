@@ -59,7 +59,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
      * @param _name The name of the token
      * @param _symbol The symbol of the token
      */
-    constructor(uint8 _chainId, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+    constructor(uint32 _chainId, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
         chainId = _chainId;
     }
 
