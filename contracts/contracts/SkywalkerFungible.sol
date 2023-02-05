@@ -89,7 +89,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
         RecordedCertificate storage rc = transactionRecorder[txData.from];
         rc.txList.push(cache);
 
-        Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
+        Fungible memory fungible = decodeData(txData.payload);
         if (fungible.op == TRANSFER) {
             _omniverseTransfer(txData.from, fungible.exData, fungible.amount);
         }
@@ -108,7 +108,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
      * @notice Check if the transaction can be executed successfully
      */
     function _checkExecution(ERC6358TransactionData memory txData) internal view {
-        Fungible memory fungible = SkywalkerFungibleHelper.decodeData(txData.payload);
+        Fungible memory fungible = decodeData(txData.payload);
         if (fungible.op == TRANSFER) {
             _checkOmniverseTransfer(txData.from, fungible.amount);
         }
@@ -344,5 +344,21 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
      */
     function getChainId() external view returns (uint32) {
         return chainId;
+    }
+
+    /**
+     * @notice Decode `_data` from bytes to Fungible
+     */
+    function decodeData(bytes memory _data) internal pure returns (Fungible memory) {
+        (uint8 op, bytes memory exData, uint256 amount) = abi.decode(_data, (uint8, bytes, uint256));
+        return Fungible(op, exData, amount);
+    }
+
+    /**
+     * @notice See IERC6358Application
+     */
+    function getPayloadRawData(bytes memory _payload) external pure returns (bytes memory) {
+        Fungible memory fungible = decodeData(_payload);
+        return abi.encodePacked(fungible.op, fungible.exData, uint128(fungible.amount));
     }
 }

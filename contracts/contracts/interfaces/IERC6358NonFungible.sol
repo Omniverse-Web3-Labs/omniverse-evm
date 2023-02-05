@@ -2,11 +2,12 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "./IERC6358.sol";
+import "./IERC6358Application.sol";
 
 /**
  * @notice Interface of the omniverse non fungible token, which inherits {IERC6358}
  */
-interface IERC6358NonFungible is IERC6358 {
+interface IERC6358NonFungible is IERC6358, IERC6358Application {
     /**
      * @notice Get the number of tokens in account `_pk`
      * @param _pk Omniverse account to be queried

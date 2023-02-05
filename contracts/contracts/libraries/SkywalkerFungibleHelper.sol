@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "../interfaces/IERC6358.sol";
+import "../interfaces/IERC6358Application.sol";
 
 /**
 * @notice Fungible token data structure, from which the field `payload` in `ERC6358TransactionData` will be encoded
@@ -64,29 +65,13 @@ enum VerifyResult {
  * NOTE The verification method is for reference only, and developers can design appropriate
  * verification mechanism based on their bussiness logic.
  */
-library SkywalkerFungibleHelper {
-    /**
-     * @notice Encode `_fungible` into bytes
-     */
-    function encodeData(Fungible memory _fungible) internal pure returns (bytes memory) {
-        return abi.encode(_fungible.op, _fungible.exData, _fungible.amount);
-    }
-
-    /**
-     * @notice Decode `_data` from bytes to Fungible
-     */
-    function decodeData(bytes memory _data) internal pure returns (Fungible memory) {
-        (uint8 op, bytes memory exData, uint256 amount) = abi.decode(_data, (uint8, bytes, uint256));
-        return Fungible(op, exData, amount);
-    }
-    
+library SkywalkerFungibleHelper {    
     /**
      * @notice Get the hash of a transaction
      */
-    function getTransactionHash(ERC6358TransactionData memory _data) public pure returns (bytes32) {
-        Fungible memory fungible = decodeData(_data.payload);
-        bytes memory payload = abi.encodePacked(fungible.op, fungible.exData, uint128(fungible.amount));
-        bytes memory rawData = abi.encodePacked(_data.nonce, _data.chainId, _data.initiateSC, _data.from, payload);
+    function getTransactionHash(ERC6358TransactionData memory _data) internal pure returns (bytes32) {
+        bytes memory payloadRawData = IERC6358Application(address(this)).getPayloadRawData(_data.payload);
+        bytes memory rawData = abi.encodePacked(_data.nonce, _data.chainId, _data.initiateSC, _data.from, payloadRawData);
         return keccak256(rawData);
     }
 
