@@ -5,25 +5,6 @@ import "../interfaces/IERC6358.sol";
 import "../interfaces/IERC6358Application.sol";
 
 /**
-* @notice Fungible token data structure, from which the field `payload` in `ERC6358TransactionData` will be encoded
-*
-* @member op: The operation type
-* NOTE op: 0-31 are reserved values, 32-255 are custom values
-*           op: 0 - omniverse account `from` transfers `amount` tokens to omniverse account `exData`, `from` have at least `amount` tokens
-*           op: 1 - omniverse account `from` mints `amount` tokens to omniverse account `exData`
-*           op: 2 - omniverse account `from` burns `amount` tokens from his own, `from` have at least `amount` tokens
-* @member exData: The operation data. This sector could be empty and is determined by `op`. For example: 
-            when `op` is 0 and 1, `exData` stores the omniverse account that receives.
-            when `op` is 2, `exData` is empty.
-* @member amount: The amount of tokens being operated
- */
-struct Fungible {
-    uint8 op;
-    bytes exData;
-    uint256 amount;
-}
-
-/**
  * @notice Used to record one omniverse transaction data
  * txData: The original omniverse transaction data committed to the contract
  * timestamp: When the omniverse transaction data is committed
@@ -65,11 +46,11 @@ enum VerifyResult {
  * NOTE The verification method is for reference only, and developers can design appropriate
  * verification mechanism based on their bussiness logic.
  */
-library SkywalkerFungibleHelper {    
+library OmniverseProtocolHelper {    
     /**
      * @notice Get the hash of a transaction
      */
-    function getTransactionHash(ERC6358TransactionData memory _data) internal pure returns (bytes32) {
+    function getTransactionHash(ERC6358TransactionData memory _data) internal view returns (bytes32) {
         bytes memory payloadRawData = IERC6358Application(address(this)).getPayloadRawData(_data.payload);
         bytes memory rawData = abi.encodePacked(_data.nonce, _data.chainId, _data.initiateSC, _data.from, payloadRawData);
         return keccak256(rawData);

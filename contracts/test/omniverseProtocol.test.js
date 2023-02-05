@@ -18,7 +18,7 @@ const MINT = 1;
 const BURN = 2;
 
 const Fungible = artifacts.require('./MockFungible.sol');
-const SkywalkerFungibleHelper = artifacts.require('./SkywalkerFungibleHelper.sol');
+const OmniverseProtocolHelper = artifacts.require('./OmniverseProtocolHelper.sol');
 Fungible.defaults({
     gas: 8000000,
 });
@@ -108,7 +108,7 @@ contract('SkywalkerFungible', function() {
     let fungible;
 
     let initContract = async function() {
-        let protocol = await SkywalkerFungibleHelper.new();
+        let protocol = await OmniverseProtocolHelper.new();
         Fungible.link(protocol);
         fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
         Fungible.address = fungible.address;
