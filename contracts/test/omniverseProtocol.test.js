@@ -10,7 +10,7 @@ const { util } = require('config');
 const CHAIN_ID = 0;
 const ONE_TOKEN = '1000000000000000000';
 const TEN_TOKEN = '10000000000000000000';
-const TOKEN_ID = 'skywalker';
+const TOKEN_SYMBOL = 'skywalker';
 const COOL_DOWN = 2;
 
 const TRANSFER = 0;
@@ -110,7 +110,7 @@ contract('SkywalkerFungible', function() {
     let initContract = async function() {
         let protocol = await OmniverseProtocolHelper.new();
         Fungible.link(protocol);
-        fungible = await Fungible.new(CHAIN_ID, TOKEN_ID, TOKEN_ID, {from: owner});
+        fungible = await Fungible.new(CHAIN_ID, TOKEN_SYMBOL, TOKEN_SYMBOL, {from: owner});
         Fungible.address = fungible.address;
         await fungible.setMembers([[CHAIN_ID, Fungible.address]]);
         await fungible.setCooingDownTime(COOL_DOWN);
