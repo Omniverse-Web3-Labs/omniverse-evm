@@ -121,6 +121,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
             _checkOmniverseBurn(fungible.exData, fungible.amount);
             _omniverseBurn(fungible.exData, fungible.amount);
         }
+        emit TransactionExecuted(txData.from, txData.nonce);
     }
     
     /**
@@ -218,6 +219,9 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
             if (_data.chainId == chainId) {
                 emit TransactionSent(_data.from, _data.nonce);
             }
+        }
+        else if (verifyRet == VerifyResult.Duplicated) {
+            emit TransactionExecuted(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Malicious) {
             // Slash

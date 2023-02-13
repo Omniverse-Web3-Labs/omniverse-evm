@@ -184,7 +184,8 @@ contract('SkywalkerNonFungible', function() {
             it('should fail', async () => {
                 let nonce = await nonFungible.getTransactionCount(ownerPk) - 1;
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
-                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Duplicated');
+                let ret = await nonFungible.sendOmniverseTransaction(txData);
+                assert(ret.logs[0].event == 'TransactionExecuted');
             });
         });
 

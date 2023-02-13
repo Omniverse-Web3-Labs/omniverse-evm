@@ -37,7 +37,8 @@ struct RecordedCertificate {
 // Result of verification of an omniverse transaction
 enum VerifyResult {
     Success,
-    Malicious
+    Malicious,
+    Duplicated
 }
 
 /**
@@ -110,7 +111,7 @@ library OmniverseProtocolHelper {
                 return VerifyResult.Malicious;
             }
             else {
-                revert("Duplicated");
+                return VerifyResult.Duplicated;
             }
         }
         else {

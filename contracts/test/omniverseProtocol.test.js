@@ -185,7 +185,8 @@ contract('SkywalkerFungible', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(ownerPk) - 1;
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Duplicated');
+                let ret = await fungible.sendOmniverseTransaction(txData);
+                assert(ret.logs[0].event == 'TransactionExecuted');
             });
         });
 

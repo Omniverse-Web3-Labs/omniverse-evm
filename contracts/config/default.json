@@ -3,14 +3,16 @@
 		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
 		"chainId": 97,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0xf9E5f797f88a8B42ad9960f3411145857cf1109f",
+		"skywalkerFungibleAddress": "0x0f6CE1D0cAa7c25E9698fbC7a1Ce9F09fe347292",
+		"skywalkerNonFungibleAddress": "0x787a1757CF8359f54fCcA14AFA4387c22dF2FfB6",
 		"omniverseChainId": 0
 	},
 	"MOCK": {
 		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
 		"chainId": 97,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x646fE2Cfd2e2942aA67C74DAe58BD1410E2c622E",
+		"skywalkerFungibleAddress": "0xD85eEE6e8517Ee9f79615c482c7ffa0bE4638161",
+		"skywalkerNonFungibleAddress": "0x68f3A02A992c3E991b63Bef1a4718eaD2d411CcC",
 		"omniverseChainId": 10000
 	},
 	"PLATONEVMDEV": {

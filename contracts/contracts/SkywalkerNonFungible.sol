@@ -52,6 +52,10 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible {
         bytes contractAddr;
     }
 
+    // Token name
+    string public name;
+    // Token symbol
+    string public symbol;
     // Chain id used to distinguish different chains
     uint32 chainId;
     // O-transaction cooling down time
@@ -82,6 +86,8 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible {
      */
     constructor(uint32 _chainId, string memory _name, string memory _symbol) {
         chainId = _chainId;
+        name = _name;
+        symbol = _symbol;
     }
 
     /**
@@ -239,6 +245,9 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible {
             if (_data.chainId == chainId) {
                 emit TransactionSent(_data.from, _data.nonce);
             }
+        }
+        else if (verifyRet == VerifyResult.Duplicated) {
+            emit TransactionExecuted(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Malicious) {
             // Slash

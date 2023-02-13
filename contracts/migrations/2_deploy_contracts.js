@@ -29,5 +29,6 @@ module.exports = async function (deployer, network) {
   }
 
   jsonData[network].skywalkerFungibleAddress = SkywalkerFungible.address;
+  jsonData[network].skywalkerNonFungibleAddress = SkywalkerNonFungible.address;
   fs.writeFileSync(contractAddressFile, JSON.stringify(jsonData, null, '\t'));
 };
