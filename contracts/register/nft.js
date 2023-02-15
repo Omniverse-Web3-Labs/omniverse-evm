@@ -98,7 +98,7 @@ async function mint(to, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: netConfig.skywalkerNonFungibleAddress,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, to, tokenId]),
     };
@@ -114,7 +114,7 @@ async function transfer(to, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: netConfig.skywalkerNonFungibleAddress,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, to, tokenId]),
     };
@@ -129,7 +129,7 @@ async function burn(from, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: netConfig.skywalkerNonFungibleAddress,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [BURN, from, tokenId]),
     };
@@ -167,8 +167,10 @@ async function getNonce(pk) {
 async function omniverseBalanceOf(pk) {
     let nonce = await ethereum.contractCall(skywalkerNonFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'omniverseBalanceOf', [pk]);
+    let members = await ethereum.contractCall(skywalkerNonFungibleContract, 'getMembers', []);
     console.log('nonce', nonce);
     console.log('amount', amount);
+    console.log('members', members);
 }
 
 async function balanceOf(address) {
