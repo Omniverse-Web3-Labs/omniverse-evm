@@ -102,10 +102,10 @@ async function mint(to, amount) {
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, to, amount]),
     };
-    console.log(txData);
     let bData = getRawData(txData, MINT, [to, amount]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, privateKeyBuffer);
+    console.log(txData);
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerFungibleContract, 'sendOmniverseTransaction', testAccountPrivateKey, [txData]);
 }
 

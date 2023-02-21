@@ -3,7 +3,7 @@
 		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
 		"chainId": 97,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x0f6CE1D0cAa7c25E9698fbC7a1Ce9F09fe347292",
+		"skywalkerFungibleAddress": "0x557A27534c51A29F418251C8f409e17c94d2366b",
 		"skywalkerNonFungibleAddress": "0x787a1757CF8359f54fCcA14AFA4387c22dF2FfB6",
 		"omniverseChainId": 0
 	},
