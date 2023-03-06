@@ -21,7 +21,7 @@ module.exports = async function (deployer, network) {
   await deployer.link(OmniverseProtocolHelper, SkywalkerFungible);
   await deployer.link(OmniverseProtocolHelper, SkywalkerNonFungible);
   await deployer.deploy(SkywalkerFungible, CHAIN_IDS[network], "skywalker", "skywalker");
-  // await deployer.deploy(SkywalkerNonFungible, CHAIN_IDS[network], "X", "X");
+  await deployer.deploy(SkywalkerNonFungible, CHAIN_IDS[network], "skywalker", "skywalker");
 
   // Update config
   if (network.indexOf('-fork') != -1 || network == 'test' || network == 'development') {
