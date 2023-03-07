@@ -382,8 +382,10 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
 
         emit OmniverseTokenTransfer(_from, _to, _tokenId);
 
+        address fromAddr = _pkToAddress(_from);
         address toAddr = _pkToAddress(_to);
         accountsMap[toAddr] = _to;
+        emit Transfer(fromAddr, toAddr, _tokenId);
     }
     
     /**
@@ -413,6 +415,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
 
         address toAddr = _pkToAddress(_to);
         accountsMap[toAddr] = _to;
+        emit Transfer(address(0), toAddr, _tokenId);
     }
 
     /**
@@ -429,6 +432,9 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
         delete omniverseOwners[_tokenId];
         omniverseBalances[_from] -= 1;
         emit OmniverseTokenTransfer(_from, "", _tokenId);
+
+        address fromAddr = _pkToAddress(_from);
+        emit Transfer(fromAddr, address(0), _tokenId);
     }
 
     /**
