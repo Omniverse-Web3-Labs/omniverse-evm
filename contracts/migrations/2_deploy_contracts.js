@@ -5,6 +5,8 @@ const fs = require("fs");
 
 const CHAIN_IDS = {
   BSCTEST: 0,
+  SUBSTRATE: 1,
+  GOERLI: 2,
   MOCK: 10000,
 };
 
