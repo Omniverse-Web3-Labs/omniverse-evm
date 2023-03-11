@@ -176,7 +176,7 @@ async function omniverseBalanceOf(pk) {
 }
 
 async function balanceOf(address) {
-    let amount = await ethereum.contractCall(skywalkerFungibleContract, 'balanceOf', [address]);
+    let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'balanceOf', [address]);
     console.log('amount', amount);
 }
 
@@ -186,7 +186,7 @@ async function omniverseOwnerOf(tokenId) {
 }
 
 async function ownerOf(tokenId) {
-    let tokenOwner = await ethereum.contractCall(skywalkerFungibleContract, 'ownerOf', [tokenId]);
+    let tokenOwner = await ethereum.contractCall(skywalkerNonFungibleContract, 'ownerOf', [tokenId]);
     console.log('tokenOwner', tokenOwner);
 }
 
@@ -294,7 +294,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init('BSCTEST')) {
+        if (!init(program.opts().omniOwner[0])) {
             return;
         }
         await omniverseOwnerOf(program.opts().omniOwner[1]);
