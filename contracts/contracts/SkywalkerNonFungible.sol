@@ -490,7 +490,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
     /**
      * @notice Set the cooling down time of an omniverse transaction
      */
-    function setCooingDownTime(uint256 _time) external {
+    function setCoolingDownTime(uint256 _time) external {
         cdTime = _time;
     }
 

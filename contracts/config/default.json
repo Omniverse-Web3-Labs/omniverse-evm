@@ -19,8 +19,8 @@
 		"nodeAddress": "wss://goerli.infura.io/ws/v3/94ebec44ffc34501898dd5dccf387f81",
 		"chainId": 5,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0xD85eEE6e8517Ee9f79615c482c7ffa0bE4638161",
-		"skywalkerNonFungibleAddress": "0x9249597f93F5014c1EbD3505FE1Bb740f1204E61",
+		"skywalkerFungibleAddress": "0xf21CA8E3Bd20e79174d5c12E5620d8Bad357CE10",
+		"skywalkerNonFungibleAddress": "0xB38d75754d799e4f07bb9EE774B9b2DAe3dB0E56",
 		"omniverseChainId": 2
 	},
 	"PLATONEVMDEV": {

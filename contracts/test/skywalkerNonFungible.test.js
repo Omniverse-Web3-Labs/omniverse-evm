@@ -112,7 +112,7 @@ contract('SkywalkerNonFungible', function() {
         nonFungible = await NonFungible.new(CHAIN_ID, TOKEN_SYMBOL, TOKEN_SYMBOL, {from: owner});
         NonFungible.address = nonFungible.address;
         await nonFungible.setMembers([[CHAIN_ID, NonFungible.address]]);
-        await nonFungible.setCooingDownTime(COOL_DOWN);
+        await nonFungible.setCoolingDownTime(COOL_DOWN);
     }
 
     const mintToken = async function(from, toPk, tokenId) {

@@ -350,7 +350,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     /**
      * @notice Set the cooling down time of an omniverse transaction
      */
-    function setCooingDownTime(uint256 _time) external {
+    function setCoolingDownTime(uint256 _time) external {
         cdTime = _time;
     }
 

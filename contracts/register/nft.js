@@ -88,7 +88,7 @@ let getRawData = (txData, op, params) => {
 }
 
 async function initialize(members) {
-    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setCooingDownTime',
+    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setCoolingDownTime',
         testAccountPrivateKey, [netConfig.coolingDown]);
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setMembers', testAccountPrivateKey, [members]);
 }
@@ -168,9 +168,11 @@ async function omniverseBalanceOf(pk) {
     let nonce = await ethereum.contractCall(skywalkerNonFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'omniverseBalanceOf', [pk]);
     let members = await ethereum.contractCall(skywalkerNonFungibleContract, 'getMembers', []);
+    let isMalicious = await ethereum.contractCall(skywalkerNonFungibleContract, 'isMalicious', [pk]);    
     console.log('nonce', nonce);
     console.log('amount', amount);
     console.log('members', members);
+    console.log('isMalicious', isMalicious);
 }
 
 async function balanceOf(address) {

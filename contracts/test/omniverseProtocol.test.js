@@ -113,7 +113,7 @@ contract('SkywalkerFungible', function() {
         fungible = await Fungible.new(CHAIN_ID, TOKEN_SYMBOL, TOKEN_SYMBOL, {from: owner});
         Fungible.address = fungible.address;
         await fungible.setMembers([[CHAIN_ID, Fungible.address]]);
-        await fungible.setCooingDownTime(COOL_DOWN);
+        await fungible.setCoolingDownTime(COOL_DOWN);
     }
 
     const mintToken = async function(from, toPk, amount) {
