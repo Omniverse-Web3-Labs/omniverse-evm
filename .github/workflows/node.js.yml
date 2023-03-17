@@ -30,4 +30,5 @@ jobs:
     - run: nohup npx ganache -s 0 &
     - run: |
         cd ${{ github.workspace }}/contracts
+        npm install
         npx truffle test
