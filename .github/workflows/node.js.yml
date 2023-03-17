@@ -31,4 +31,5 @@ jobs:
     - run: |
         cd ${{ github.workspace }}/contracts
         npm install
+        touch .secret
         npx truffle test
