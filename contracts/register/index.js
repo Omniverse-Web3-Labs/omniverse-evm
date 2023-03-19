@@ -32,6 +32,8 @@ let publicKey = '0x' + publicKeyBuffer.toString('hex').slice(2);
 // the third account address: 0x8408925fD39071270Ed1AcA5d618e1c79be08B27
 // the forth account pk: 0xfb73e1e37a4999060a9a9b1e38a12f8a7c24169caa39a2fb304dc3506dd2d797f8d7e4dcd28692ae02b7627c2aebafb443e9600e476b465da5c4dddbbc3f2782
 // the forth account address: 0x04e5d0f5478849C94F02850bFF91113d8F02864D
+// the fifth account pk: 0x20c7141c90c2346eae1c07e739222ae815b7fa839ea7931e27340bedb3603c70dd9926c3a089ddfd84acfd6c701b3a043f10f9f57c68140e4686cf38d779d5a4
+// the fifth account address: 0x78c13EB6810B3a0ccee6A347295E7F5902EaFAAe
 
 function _init(chainName) {
     let netConfig = config.get(chainName);

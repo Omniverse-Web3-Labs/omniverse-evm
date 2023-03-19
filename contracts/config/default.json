@@ -3,33 +3,24 @@
 		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
 		"chainId": 97,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x557A27534c51A29F418251C8f409e17c94d2366b",
-		"skywalkerNonFungibleAddress": "0x787a1757CF8359f54fCcA14AFA4387c22dF2FfB6",
+		"skywalkerFungibleAddress": "0x7c52b6e88c9Cc397d82506b9e4df6D7D06674934",
+		"skywalkerNonFungibleAddress": "0xBF2F3eae1e507e6A6450C7E8BCa40b273962AA6B",
 		"omniverseChainId": 0
-	},
-	"MOCK": {
-		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
-		"chainId": 97,
-		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0xD85eEE6e8517Ee9f79615c482c7ffa0bE4638161",
-		"skywalkerNonFungibleAddress": "0x68f3A02A992c3E991b63Bef1a4718eaD2d411CcC",
-		"omniverseChainId": 10000
 	},
 	"GOERLI": {
 		"nodeAddress": "wss://goerli.infura.io/ws/v3/94ebec44ffc34501898dd5dccf387f81",
 		"chainId": 5,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0xf21CA8E3Bd20e79174d5c12E5620d8Bad357CE10",
-		"skywalkerNonFungibleAddress": "0xB38d75754d799e4f07bb9EE774B9b2DAe3dB0E56",
+		"skywalkerFungibleAddress": "0x8Ec8b47771EA452f206B441A71e0a166F348C711",
+		"skywalkerNonFungibleAddress": "0xcbC3b5A344eE3d55a7527F1a5e6dB4CE84DdB380",
 		"omniverseChainId": 2
 	},
-	"PLATONEVMDEV": {
-		"nodeAddress": "https://devnet2openapi.platon.network/rpc",
-		"chainId": 2206132,
-		"omniverseProtocolAddress": "0x269E1f94610B0434f905Cc0f54A95A7b066973D1",
-		"skywalkerFungibleAddressX": "0x9c7d688BdFB148cb69A206AB32bf22f2Fd46e1fe",
-		"skywalkerFungibleAddressY": "0xC6E7c04738c519D475BE546938dC831fA63268b4",
+	"MOONBASEALPHA": {
+		"nodeAddress": "wss://moonbeam-alpha.api.onfinality.io/public-ws",
+		"chainId": 1287,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x9c7d688BdFB148cb69A206AB32bf22f2Fd46e1fe"
+		"skywalkerFungibleAddress": "0x4B89eBA967d8333C6664F42A18EE5fb42e22a0dA",
+		"skywalkerNonFungibleAddress": "0xe07804c5e32423A95a0B1fA56845D7fC46230847",
+		"omniverseChainId": 3
 	}
 }
