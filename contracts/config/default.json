@@ -22,5 +22,13 @@
 		"skywalkerFungibleAddress": "0x4B89eBA967d8333C6664F42A18EE5fb42e22a0dA",
 		"skywalkerNonFungibleAddress": "0xe07804c5e32423A95a0B1fA56845D7fC46230847",
 		"omniverseChainId": 3
+	},
+	"PLATON": {
+		"nodeAddress": "wss://openapi2.platon.network/ws",
+		"chainId": 210425,
+		"coolingDown": 10,
+		"skywalkerFungibleAddress": "0x1181E9bBb48a5448c81CF1A2532A3D4257C69E22",
+		"skywalkerNonFungibleAddress": "0x68170f4Dc61c02771051CcD0FF26295D6330f47d",
+		"omniverseChainId": 4
 	}
 }
