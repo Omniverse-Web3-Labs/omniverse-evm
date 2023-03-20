@@ -215,8 +215,10 @@ async function approveDeposit(index) {
 async function omniverseBalanceOf(pk) {
     let nonce = await ethereum.contractCall(skywalkerFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerFungibleContract, 'omniverseBalanceOf', [pk]);
+    let members = await ethereum.contractCall(skywalkerFungibleContract, 'getMembers', []);
     console.log('nonce', nonce);
     console.log('amount', amount);
+    console.log('members', members);
 }
 
 async function balanceOf(address) {
