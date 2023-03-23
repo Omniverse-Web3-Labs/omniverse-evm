@@ -1,5 +1,3 @@
-const Web3 = require('web3');
-
 const expectThrow = async (promise, message) => {
     try {
         await promise;
@@ -38,9 +36,9 @@ function toHexString(byteArray) {
 }
 
 // Mine one block
-async function evmMineOneBlock (web3js) {
+async function evmMineOneBlock (provider) {
     await new Promise((resolve, reject) => {
-        web3js.send({
+        provider.send({
             jsonrpc: "2.0",
             method: "evm_mine",
             id: new Date().getTime()
@@ -62,15 +60,14 @@ async function sleep(seconds) {
 }
 
 // Mine blocks
-async function evmMine (num) {
+async function evmMine (num, provider) {
     for (let i = 0; i < num; i++) {
-        await evmMineOneBlock(Web3.givenProvider);
+        await evmMineOneBlock(provider);
     }
 };
 
 // Returns the latest block
-async function getBlock() {
-    const web3js = new Web3(Web3.givenProvider);
+async function getBlock(web3js) {
     let block = await web3js.eth.getBlock("latest");
     return block;
 }
