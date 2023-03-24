@@ -1,42 +1,30 @@
-# contracts
+# Example implementation of EIP-6358
 
-## Command line tool
-### Install
+## Prerequisites
+- node >= v18.12.1
+- npm >= 8.19.2
+- npx >= 8.19.2
 
-* Get into this repo `./` first.
-* Install node environment. 
-```sh
+## Installation
+```
 npm install
 ```
 
-### Usage
-
-Command  
-*-o, --omniBalance <token type>,<pk>  Query the balance of the omniverse token*
-
-Query omniverse token amount of X
+## Compilation
 ```
-node register/index.js -o X,<OMNIVERSE_ACCOUNT>
+touch .secret
+npx truffle compile
 ```
 
-Query omniverse token amount of Y
+## Unit test
+### Launch local testnet
 ```
-node register/index.js -o Y,<OMNIVERSE_ACCOUNT>
+npx ganache -s 0
 ```
 
-The result will be similar with follows:  
-![img](./assets/amount-after-swap.png)  
-![img](./assets/amount-after-swap-1.png)  
-<p align="center">Figure.1 The balance of Token X and Token Y after swap</p>  
+### Test
+Open another terminal
 
-![img](./assets/amount-after-transfer.png)  
-![img](./assets/amount-after-transfer-1.png)  
-<p align="center">Figure.2 The balance of Token X of sender and receiver account after transfer</p>  
-
-## Contract addresses
-
-### BSC Testnet
-
-- BSCTEST:
-    - Omniverse Token "X": [0x2fea6b82bAd2999C8Abb0C072363f86f2add5292](https://testnet.bscscan.com/address/0x2fea6b82bAd2999C8Abb0C072363f86f2add5292),
-    - Omniverse Token "Y": [0x069c23c166Edff0398958C261D3968713B21139c](https://testnet.bscscan.com/address/0x069c23c166Edff0398958C261D3968713B21139c),
+```
+npx truffle test
+```
