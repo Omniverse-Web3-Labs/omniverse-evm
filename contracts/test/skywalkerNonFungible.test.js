@@ -3,9 +3,9 @@ const BN = require('bn.js');
 const secp256k1 = require('secp256k1');
 const keccak256 = require('keccak256');
 const Web3 = require('web3');
-const web3js = new Web3(Web3.givenProvider);
+const providerUrl = 'http://localhost:8545';
+const web3js = new Web3(providerUrl);
 const assert = require('assert');
-const { util } = require('config');
 
 const CHAIN_ID = 0;
 const TOKEN_ID = 1;
@@ -120,7 +120,7 @@ contract('SkywalkerNonFungible', function() {
         let txData = encodeMint(from, toPk, tokenId, nonce);
         await nonFungible.sendOmniverseTransaction(txData);
         await utils.sleep(COOL_DOWN);
-        await utils.evmMine(1);
+        await utils.evmMine(1, web3js.currentProvider);
         let ret = await nonFungible.triggerExecution();
     }
     
@@ -164,7 +164,7 @@ contract('SkywalkerNonFungible', function() {
                 let count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 0, "The count should be zero");
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 ret = await nonFungible.triggerExecution();
                 count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 1, "The count should be one");
@@ -192,10 +192,10 @@ contract('SkywalkerNonFungible', function() {
         describe('Cooled down', function() {
             it('should succeed', async () => {
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 let nonce = await nonFungible.getTransactionCount(ownerPk);
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 ret = await nonFungible.triggerExecution();
                 let count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 2);
@@ -235,7 +235,7 @@ contract('SkywalkerNonFungible', function() {
                 let count = await nonFungible.getDelayedTxCount();
                 assert(count == 1, 'The number of delayed txs should be one');
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 ret = await nonFungible.triggerExecution();
             });
         });
@@ -277,7 +277,7 @@ contract('SkywalkerNonFungible', function() {
         describe('Cooled down', function() {
             it('should be one transaction', async () => {
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 let tx = await nonFungible.getExecutableDelayedTx();
                 assert(tx.sender == ownerPk, 'There should be one transaction');
             });
@@ -324,7 +324,7 @@ contract('SkywalkerNonFungible', function() {
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID, nonce);
                 await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 let ret = await nonFungible.triggerExecution();
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
                 let tokenOwner = await nonFungible.omniverseOwnerOf(TOKEN_ID);
@@ -363,7 +363,7 @@ contract('SkywalkerNonFungible', function() {
                 let txData = encodeBurn({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID, nonce);
                 await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 let ret = await nonFungible.triggerExecution();
                 await utils.expectThrow(nonFungible.omniverseOwnerOf(TOKEN_ID), "Token not exist");
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
@@ -393,7 +393,7 @@ contract('SkywalkerNonFungible', function() {
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
-                await utils.evmMine(1);
+                await utils.evmMine(1, web3js.currentProvider);
                 let ret = await nonFungible.triggerExecution();
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
                 let tokenOwner = await nonFungible.omniverseOwnerOf(TOKEN_ID);
