@@ -85,7 +85,7 @@ library OmniverseProtocolHelper {
     /**
      * @notice Convert the public key to evm address
      */
-    function _pkToAddress(bytes memory _pk) internal pure returns (address) {
+    function pkToAddress(bytes memory _pk) public pure returns (address) {
         bytes32 hash = keccak256(_pk);
         return address(uint160(uint256(hash)));
     }
@@ -114,7 +114,7 @@ library OmniverseProtocolHelper {
      */
     function verifyTransaction(RecordedCertificate storage rc, ERC6358TransactionData memory _data) public returns (VerifyResult) {
         bytes memory rawData = getRawData(_data);
-        address senderAddress = _pkToAddress(_data.from);
+        address senderAddress = pkToAddress(_data.from);
         require(verifySignature(rawData, _data.signature, senderAddress), "Signature error");
 
         // Check nonce

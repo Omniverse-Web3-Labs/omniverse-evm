@@ -165,7 +165,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
      */
     function ownerOf(uint256 tokenId) external view returns (address owner) {
         bytes memory ret = this.omniverseOwnerOf(tokenId);
-        return _pkToAddress(ret);
+        return OmniverseProtocolHelper.pkToAddress(ret);
     }
 
     /**
@@ -382,8 +382,8 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
 
         emit OmniverseTokenTransfer(_from, _to, _tokenId);
 
-        address fromAddr = _pkToAddress(_from);
-        address toAddr = _pkToAddress(_to);
+        address fromAddr = OmniverseProtocolHelper.pkToAddress(_from);
+        address toAddr = OmniverseProtocolHelper.pkToAddress(_to);
         accountsMap[toAddr] = _to;
         emit Transfer(fromAddr, toAddr, _tokenId);
     }
@@ -392,7 +392,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
      * @notice Check if the public key is the owner
      */
     function _checkOwner(bytes memory _pk) internal view {
-        address fromAddr = _pkToAddress(_pk);
+        address fromAddr = OmniverseProtocolHelper.pkToAddress(_pk);
         require(fromAddr == owner(), "Not owner");
     }
 
@@ -413,7 +413,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
         omniverseBalances[_to] += 1;
         emit OmniverseTokenTransfer("", _to, _tokenId);
 
-        address toAddr = _pkToAddress(_to);
+        address toAddr = OmniverseProtocolHelper.pkToAddress(_to);
         accountsMap[toAddr] = _to;
         emit Transfer(address(0), toAddr, _tokenId);
     }
@@ -433,16 +433,8 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
         omniverseBalances[_from] -= 1;
         emit OmniverseTokenTransfer(_from, "", _tokenId);
 
-        address fromAddr = _pkToAddress(_from);
+        address fromAddr = OmniverseProtocolHelper.pkToAddress(_from);
         emit Transfer(fromAddr, address(0), _tokenId);
-    }
-
-    /**
-     * @notice Convert the public key to evm address
-     */
-    function _pkToAddress(bytes memory _pk) internal pure returns (address) {
-        bytes32 hash = keccak256(_pk);
-        return address(uint160(uint256(hash)));
     }
 
     /**
