@@ -134,7 +134,7 @@ contract('SkywalkerNonFungible', function() {
                 let nonce = await nonFungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 txData.signature = txData.signature.slice(0, -2);
-                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Verify failed');
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Signature error');
             });
         });
 
@@ -143,7 +143,7 @@ contract('SkywalkerNonFungible', function() {
                 let nonce = await nonFungible.getTransactionCount(user1Pk);
                 let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 txData.from = ownerPk;
-                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Signer not sender');
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Signature error');
             });
         });
 
@@ -209,6 +209,31 @@ contract('SkywalkerNonFungible', function() {
                 await nonFungible.sendOmniverseTransaction(txData);
                 let malicious = await nonFungible.isMalicious(ownerPk);
                 assert(malicious, "It should be malicious");
+            });
+        });
+    });
+
+    describe('Personal signing', function() {
+        before(async function() {
+            await initContract();
+        });
+
+        describe('All conditions satisfied', function() {
+            it('should succeed', async () => {
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                let bData = getRawData(txData, MINT, [user2Pk, TOKEN_ID]);
+                let hash = keccak256(Buffer.concat([Buffer.from('\x19Ethereum Signed Message:\n' + bData.length), bData]));
+                txData.signature = signData(hash, ownerSk);
+                let ret = await nonFungible.sendOmniverseTransaction(txData);
+                assert(ret.logs[0].event == 'TransactionSent');
+                let count = await nonFungible.getTransactionCount(ownerPk);
+                assert(count == 0, "The count should be zero");
+                await utils.sleep(COOL_DOWN);
+                await utils.evmMine(1, web3js.currentProvider);
+                ret = await nonFungible.triggerExecution();
+                count = await nonFungible.getTransactionCount(ownerPk);
+                assert(count == 1, "The count should be one");
             });
         });
     });
