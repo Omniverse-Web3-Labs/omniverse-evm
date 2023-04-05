@@ -7,6 +7,9 @@ const CHAIN_IDS = {
   BSCTEST: 0,
   SUBSTRATE: 1,
   GOERLI: 2,
+  MOONBASEALPHA: 3,
+  PLATON: 4,
+  SEPOLIA: 5,
   MOCK: 10000,
 };
 
