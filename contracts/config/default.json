@@ -4,7 +4,7 @@
 		"chainId": 97,
 		"coolingDown": 10,
 		"skywalkerFungibleAddress": "0x12B22989407C8E6C69df5477AbD7b569b024Aba0",
-		"skywalkerNonFungibleAddress": "0x034A96776759193191ED5244109765D18D4ff21e",
+		"skywalkerNonFungibleAddress": "0x1AF65Fa4fd838074980CadB398969C9fA10c9Ce7",
 		"omniverseChainId": 0
 	},
 	"SEPOLIA": {
@@ -12,7 +12,7 @@
 		"chainId": 11155111,
 		"coolingDown": 10,
 		"skywalkerFungibleAddress": "0x64aEcC149f292eCbCf8Dd93B320d5a9780aba191",
-		"skywalkerNonFungibleAddress": "0x7445A60aad2657FE455443fA0A67ef0E2505E553",
+		"skywalkerNonFungibleAddress": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7",
 		"omniverseChainId": 5
 	},
 	"MOONBASEALPHA": {
@@ -20,7 +20,7 @@
 		"chainId": 1287,
 		"coolingDown": 10,
 		"skywalkerFungibleAddress": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7",
-		"skywalkerNonFungibleAddress": "0x12B22989407C8E6C69df5477AbD7b569b024Aba0",
+		"skywalkerNonFungibleAddress": "0x19Fa95dF1097b7a3848bF3069b4Bb694E5F4b2e1",
 		"omniverseChainId": 3
 	},
 	"PLATON": {
@@ -28,7 +28,7 @@
 		"chainId": 210425,
 		"coolingDown": 10,
 		"skywalkerFungibleAddress": "0x0791B79Ba0DC124dd357633Bf298719aa12f7D59",
-		"skywalkerNonFungibleAddress": "0xAdE87da4def15e8D52dA4A78d9CC1eda9AB576D6",
+		"skywalkerNonFungibleAddress": "0x13A689B55FF8Bf86a8dEAC357553eabDd93f78fb",
 		"omniverseChainId": 4
 	}
 }
