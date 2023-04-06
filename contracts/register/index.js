@@ -87,10 +87,9 @@ let getRawData = (txData, op, params) => {
     return ret;
 }
 
-async function initialize(baseUri, members) {
+async function initialize(members) {
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerFungibleContract, 'setCoolingDownTime',
         testAccountPrivateKey, [netConfig.coolingDown]);
-    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerFungibleContract, 'setBaseURI', testAccountPrivateKey, [baseUri]);
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerFungibleContract, 'setMembers', testAccountPrivateKey, [members]);
 }
 
@@ -234,7 +233,7 @@ async function balanceOf(address) {
 
     program
         .version('0.1.0')
-        .option('-i, --initialize <chain name>,<base uri>,<chain id>|<contract address>,...', 'Initialize omnioverse contracts', list)
+        .option('-i, --initialize <chain name>,<chain id>|<contract address>,...', 'Initialize omnioverse contracts', list)
         .option('-t, --transfer <chain name>,<pk>,<amount>', 'Transfer token', list)
         .option('-a, --withdraw <chain name>,<amount>', 'Withdraw token', list)
         .option('-ad, --approve_deposit <chain name>,<index>', 'Approve deposit', list)
@@ -263,7 +262,7 @@ async function balanceOf(address) {
         }
 
         let members = [];
-        let param = program.opts().initialize.slice(2);
+        let param = program.opts().initialize.slice(1);
         for (let i = 0; i < param.length; i++) {
             let m = param[i].split('|');
             members.push({
@@ -271,7 +270,7 @@ async function balanceOf(address) {
                 contractAddr: m[1]
             });
         }
-        await initialize(program.opts().initialize[1], members);
+        await initialize(members);
     }
     else if (program.opts().withdraw) {
         if (program.opts().withdraw.length != 2) {
