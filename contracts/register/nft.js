@@ -90,7 +90,7 @@ let getRawData = (txData, op, params) => {
 async function initialize(baseUri, members) {
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setCoolingDownTime',
         testAccountPrivateKey, [netConfig.coolingDown]);
-    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerFungibleContract, 'setBaseURI', testAccountPrivateKey, [baseUri]);
+    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setBaseURI', testAccountPrivateKey, [baseUri]);
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setMembers', testAccountPrivateKey, [members]);
 }
 
