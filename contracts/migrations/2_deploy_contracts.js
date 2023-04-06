@@ -10,6 +10,7 @@ const CHAIN_IDS = {
   MOONBASEALPHA: 3,
   PLATON: 4,
   SEPOLIA: 5,
+  MUMBAI: 6,
   MOCK: 10000,
 };
 

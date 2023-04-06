@@ -15,13 +15,13 @@
 		"skywalkerNonFungibleAddress": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7",
 		"omniverseChainId": 5
 	},
-	"MOONBASEALPHA": {
-		"nodeAddress": "wss://moonbeam-alpha.api.onfinality.io/public-ws",
-		"chainId": 1287,
+	"MUMBAI": {
+		"nodeAddress": "https://rpc-mumbai.matic.today",
+		"chainId": 80001,
 		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7",
-		"skywalkerNonFungibleAddress": "0x19Fa95dF1097b7a3848bF3069b4Bb694E5F4b2e1",
-		"omniverseChainId": 3
+		"skywalkerFungibleAddress": "0x1181e9bbb48a5448c81cf1a2532a3d4257c69e22",
+		"skywalkerNonFungibleAddress": "0x4F77711365BB96969D763Fc8CB6cB40964aC94Ce",
+		"omniverseChainId": 6
 	},
 	"PLATON": {
 		"nodeAddress": "https://openapi2.platon.network/rpc",
