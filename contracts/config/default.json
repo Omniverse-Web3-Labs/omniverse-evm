@@ -16,7 +16,7 @@
 		"omniverseChainId": 5
 	},
 	"MUMBAI": {
-		"nodeAddress": "https://rpc-mumbai.matic.today",
+		"nodeAddress": "https://rpc-mumbai.maticvigil.com",
 		"chainId": 80001,
 		"coolingDown": 10,
 		"skywalkerFungibleAddress": "0x1181e9bbb48a5448c81cf1a2532a3d4257c69e22",
