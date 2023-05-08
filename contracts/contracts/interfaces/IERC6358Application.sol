@@ -11,6 +11,12 @@ interface IERC6358Application {
     event TransactionExecuted(bytes pk, uint256 nonce);
 
     /**
+     * @notice Emitted when a o-transaction which has nonce `nonce` and was signed by user `pk`
+                has the same transaction data as an executed o-transaction
+     */
+    event TransactionDuplicated(bytes pk, uint256 nonce);
+
+    /**
      * @notice From the `_payload`, calculate the raw data which is used to generate signature
      * @param _payload Original data committed by synchronizers, and stored in hostorical transaction list
      * @return Returns The raw data of `_payload`

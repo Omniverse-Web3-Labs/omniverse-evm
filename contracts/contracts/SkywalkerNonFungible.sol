@@ -145,6 +145,7 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
             _checkOmniverseBurn(nonFungible.exData, nonFungible.tokenId);
             _omniverseBurn(nonFungible.exData, nonFungible.tokenId);
         }
+        emit TransactionExecuted(txData.from, txData.nonce);
     }
 
     /**
@@ -351,12 +352,10 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
             cache.txData = _data;
             cache.timestamp = block.timestamp;
             delayedTxs.push(DelayedTx(_data.from, _data.nonce));
-            if (_data.chainId == chainId) {
-                emit TransactionSent(_data.from, _data.nonce);
-            }
+            emit TransactionSent(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Duplicated) {
-            emit TransactionExecuted(_data.from, _data.nonce);
+            emit TransactionDuplicated(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Malicious) {
             // Slash
