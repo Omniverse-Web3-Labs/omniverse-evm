@@ -19,7 +19,7 @@ module.exports = {
       // console.log('gas: '+gas);
       // console.log('gasPrice: '+gasPrice);
       // console.log('estimateGas: ' + estimateGas);
-      const tx = { account, to, chainId, data, nonce, gas: 8000000, gasPrice };
+      const tx = { account, to, chainId, data, nonce, gas: 1000000, gasPrice };
       console.log(tx);
 
       let signTx =

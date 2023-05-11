@@ -71,9 +71,14 @@ module.exports = {
       provider: () => new HDWalletProvider(mnemonic, `https://bsc-testnet.public.blastapi.io`),
       network_id: "*",       // Any network (default: none)
     },
-    // BSC testnet
+    // Ethereum testnet
     GOERLI: {
       provider: () => new HDWalletProvider(mnemonic, `wss://goerli.infura.io/ws/v3/94ebec44ffc34501898dd5dccf387f81`),
+      network_id: "*",       // Any network (default: none)
+    },
+    // Ethereum testnet
+    SEPOLIA: {
+      provider: () => new HDWalletProvider(mnemonic, `https://sepolia.infura.io/v3/94ebec44ffc34501898dd5dccf387f81`),
       network_id: "*",       // Any network (default: none)
     },
     // Another network with more advanced options...

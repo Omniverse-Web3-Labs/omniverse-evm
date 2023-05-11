@@ -28,10 +28,10 @@ let publicKey = '0x' + publicKeyBuffer.toString('hex').slice(2);
 // the first account address: 0xD6d27b2E732852D8f8409b1991d6Bf0cB94dd201
 // the second account pk: 0x1c0ae2fe60e7b9e91b3690626318c8759147c6daf96147d886d37b4df8dd8829db901b1a4bbb9374b35322660503495597332b3944e49985fa2e827797634799
 // the second account address: 0x30ad2981E83615001fe698b6fBa1bbCb52C19Dfa
-// the second account pk: 0xcc643d259ada7570872ef9a4fd30b196f5b3a3bae0a6ffabd57fb6a3367fb6d3c5f45cb61994dbccd619bb6f11c522f71a5f636781a1f234fd79ec93bea579d3
-// the second account address: 0x8408925fD39071270Ed1AcA5d618e1c79be08B27
-// the third account pk: 0xfb73e1e37a4999060a9a9b1e38a12f8a7c24169caa39a2fb304dc3506dd2d797f8d7e4dcd28692ae02b7627c2aebafb443e9600e476b465da5c4dddbbc3f2782
-// the third account address: 0x04e5d0f5478849C94F02850bFF91113d8F02864D
+// the third account pk: 0xcc643d259ada7570872ef9a4fd30b196f5b3a3bae0a6ffabd57fb6a3367fb6d3c5f45cb61994dbccd619bb6f11c522f71a5f636781a1f234fd79ec93bea579d3
+// the third account address: 0x8408925fD39071270Ed1AcA5d618e1c79be08B27
+// the forth account pk: 0xfb73e1e37a4999060a9a9b1e38a12f8a7c24169caa39a2fb304dc3506dd2d797f8d7e4dcd28692ae02b7627c2aebafb443e9600e476b465da5c4dddbbc3f2782
+// the forth account address: 0x04e5d0f5478849C94F02850bFF91113d8F02864D
 
 function _init(chainName) {
     let netConfig = config.get(chainName);
@@ -87,9 +87,10 @@ let getRawData = (txData, op, params) => {
     return ret;
 }
 
-async function initialize(members) {
-    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setCooingDownTime',
+async function initialize(baseUri, members) {
+    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setCoolingDownTime',
         testAccountPrivateKey, [netConfig.coolingDown]);
+    await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setBaseURI', testAccountPrivateKey, [baseUri]);
     await ethereum.sendTransaction(web3, netConfig.chainId, skywalkerNonFungibleContract, 'setMembers', testAccountPrivateKey, [members]);
 }
 
@@ -168,13 +169,15 @@ async function omniverseBalanceOf(pk) {
     let nonce = await ethereum.contractCall(skywalkerNonFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'omniverseBalanceOf', [pk]);
     let members = await ethereum.contractCall(skywalkerNonFungibleContract, 'getMembers', []);
+    let isMalicious = await ethereum.contractCall(skywalkerNonFungibleContract, 'isMalicious', [pk]);    
     console.log('nonce', nonce);
     console.log('amount', amount);
     console.log('members', members);
+    console.log('isMalicious', isMalicious);
 }
 
 async function balanceOf(address) {
-    let amount = await ethereum.contractCall(skywalkerFungibleContract, 'balanceOf', [address]);
+    let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'balanceOf', [address]);
     console.log('amount', amount);
 }
 
@@ -184,7 +187,7 @@ async function omniverseOwnerOf(tokenId) {
 }
 
 async function ownerOf(tokenId) {
-    let tokenOwner = await ethereum.contractCall(skywalkerFungibleContract, 'ownerOf', [tokenId]);
+    let tokenOwner = await ethereum.contractCall(skywalkerNonFungibleContract, 'ownerOf', [tokenId]);
     console.log('tokenOwner', tokenOwner);
 }
 
@@ -195,7 +198,7 @@ async function ownerOf(tokenId) {
 
     program
         .version('0.1.0')
-        .option('-i, --initialize <chain name>,<chain id>|<contract address>,...', 'Initialize omnioverse contracts', list)
+        .option('-i, --initialize <chain name>,<base uri>,<chain id>|<contract address>,...', 'Initialize omnioverse contracts', list)
         .option('-t, --transfer <chain name>,<pk>,<tokenId>', 'Transfer token', list)
         .option('-m, --mint <chain name>,<pk>,<tokenId>', 'Mint token', list)
         .option('-b, --burn <chain name>,<pk>,<tokenId>', 'Burn token', list)
@@ -221,7 +224,7 @@ async function ownerOf(tokenId) {
         }
 
         let members = [];
-        let param = program.opts().initialize.slice(1);
+        let param = program.opts().initialize.slice(2);
         for (let i = 0; i < param.length; i++) {
             let m = param[i].split('|');
             members.push({
@@ -229,7 +232,7 @@ async function ownerOf(tokenId) {
                 contractAddr: m[1]
             });
         }
-        await initialize(members);
+        await initialize(program.opts().initialize[1], members);
     }
     else if (program.opts().transfer) {
         if (program.opts().transfer.length != 3) {
@@ -292,7 +295,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init('BSCTEST')) {
+        if (!init(program.opts().omniOwner[0])) {
             return;
         }
         await omniverseOwnerOf(program.opts().omniOwner[1]);
