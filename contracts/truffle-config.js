@@ -53,7 +53,7 @@ module.exports = {
     },
     // PlatON main network based on evm
     PLATONEVM: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://openapi.platon.network/ws`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://openapi2.platon.network/ws`),
       network_id: "*",       // Any network (default: none)
     },
     // Moonbeam testnet
@@ -67,8 +67,18 @@ module.exports = {
       network_id: "*",       // Any network (default: none)
     },
     // BSC testnet
+    MOCK: {
+      provider: () => new HDWalletProvider(mnemonic, `https://bsc-testnet.public.blastapi.io`),
+      network_id: "*",       // Any network (default: none)
+    },
+    // Ethereum testnet
     GOERLI: {
       provider: () => new HDWalletProvider(mnemonic, `wss://goerli.infura.io/ws/v3/94ebec44ffc34501898dd5dccf387f81`),
+      network_id: "*",       // Any network (default: none)
+    },
+    // Ethereum testnet
+    SEPOLIA: {
+      provider: () => new HDWalletProvider(mnemonic, `https://sepolia.infura.io/v3/94ebec44ffc34501898dd5dccf387f81`),
       network_id: "*",       // Any network (default: none)
     },
     // Another network with more advanced options...

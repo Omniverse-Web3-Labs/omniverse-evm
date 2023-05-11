@@ -2,33 +2,37 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "./libraries/OmniverseProtocolHelper.sol";
-import "./interfaces/IERC6358Fungible.sol";
+import "./interfaces/IERC6358NonFungible.sol";
 
 /**
-* @notice Fungible token data structure, from which the field `payload` in `ERC6358TransactionData` will be encoded
+* @notice Non-Fungible token data structure, from which the field `payload` in `ERC6358TransactionData` will be encoded
 *
 * @member op: The operation type
 * NOTE op: 0-31 are reserved values, 32-255 are custom values
-*           op: 0 - omniverse account `from` transfers `amount` tokens to omniverse account `exData`, `from` have at least `amount` tokens
-*           op: 1 - omniverse account `from` mints `amount` tokens to omniverse account `exData`
-*           op: 2 - omniverse account `from` burns `amount` tokens from his own, `from` have at least `amount` tokens
+*           op: 0 - omniverse account `from` transfers the token with id `tokenId` to omniverse account `exData`, `from` have the token with id `tokenId`
+*           op: 1 - omniverse account `from` mints the token with id `tokenId` to omniverse account `exData`
+*           op: 2 - omniverse account `from` burns the token with id `tokenId` from omniverse account `exData`, `exData` MUST have the token with id `tokenId`
 * @member exData: The operation data. This sector could be empty and is determined by `op`. For example: 
             when `op` is 0 and 1, `exData` stores the omniverse account that receives.
             when `op` is 2, `exData` is empty.
-* @member amount: The amount of tokens being operated
+* @member tokenId: The token id of the non-fungible token being operated
  */
-struct Fungible {
+struct NonFungible {
     uint8 op;
     bytes exData;
-    uint256 amount;
+    uint256 tokenId;
 }
 
 /**
- * @notice Implementation of the {IERC6358Fungible} interface
+ * @notice Implementation of the {IERC6358NonFungible} interface
  */
-contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
+contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721Metadata {
+    using Strings for uint256;
+
     uint8 constant TRANSFER = 0;
     uint8 constant MINT = 1;
     uint8 constant BURN = 2;
@@ -52,6 +56,12 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
         bytes contractAddr;
     }
 
+    // Token name
+    string private tokenName;
+    // Token symbol
+    string private tokenSymbol;
+    // Base URI
+    string public baseURI;
     // Chain id used to distinguish different chains
     uint32 chainId;
     // O-transaction cooling down time
@@ -63,6 +73,8 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
 
     // All information of chains on which the token is deployed
     Member[] members;
+    // Token owners
+    mapping(uint256 => bytes) omniverseOwners;
     // Omniverse balances
     mapping(bytes => uint256) omniverseBalances;
     // Delay-executing transactions
@@ -78,12 +90,24 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
      * @param _name The name of the token
      * @param _symbol The symbol of the token
      */
-    constructor(uint32 _chainId, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+    constructor(uint32 _chainId, string memory _name, string memory _symbol) {
         chainId = _chainId;
+        tokenName = _name;
+        tokenSymbol = _symbol;
     }
 
     /**
-     * @notice See {IERC6358Fungible-sendOmniverseTransaction}
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
+    }
+
+    /**
+     * @notice See {IERC6358NonFungible-sendOmniverseTransaction}
      * Send an omniverse transaction
      */
     function sendOmniverseTransaction(ERC6358TransactionData calldata _data) external override {
@@ -91,7 +115,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     }
 
     /**
-     * @notice See {IERC6358Fungible-triggerExecution}
+     * @notice See {IERC6358NonFungible-triggerExecution}
      */
     function triggerExecution() external {
         require(delayedTxs.length > 0, "No delayed tx");
@@ -108,36 +132,150 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
         RecordedCertificate storage rc = transactionRecorder[txData.from];
         rc.txList.push(cache);
 
-        Fungible memory fungible = decodeData(txData.payload);
-        if (fungible.op == TRANSFER) {
-            _omniverseTransfer(txData.from, fungible.exData, fungible.amount);
+        NonFungible memory nonFungible = decodeData(txData.payload);
+        if (nonFungible.op == TRANSFER) {
+            _omniverseTransfer(txData.from, nonFungible.exData, nonFungible.tokenId);
         }
-        else if (fungible.op == MINT) {
+        else if (nonFungible.op == MINT) {
             _checkOwner(txData.from);
-            _omniverseMint(fungible.exData, fungible.amount);
+            _omniverseMint(nonFungible.exData, nonFungible.tokenId);
         }
-        else if (fungible.op == BURN) {
+        else if (nonFungible.op == BURN) {
             _checkOwner(txData.from);
-            _checkOmniverseBurn(fungible.exData, fungible.amount);
-            _omniverseBurn(fungible.exData, fungible.amount);
+            _checkOmniverseBurn(nonFungible.exData, nonFungible.tokenId);
+            _omniverseBurn(nonFungible.exData, nonFungible.tokenId);
         }
-        emit TransactionExecuted(txData.from, txData.nonce);
+    }
+
+    /**
+     * @notice See {IERC721-balanceOf}.
+     */
+    function balanceOf(address owner) public view returns (uint256 balance) {
+        bytes storage pk = accountsMap[owner];
+        if (pk.length == 0) {
+            balance = 0;
+        }
+        else {
+            balance = omniverseBalances[pk];
+        }
+    }
+
+    /**
+     * @notice See {IERC721-ownerOf}.
+     */
+    function ownerOf(uint256 tokenId) external view returns (address owner) {
+        bytes memory ret = this.omniverseOwnerOf(tokenId);
+        return OmniverseProtocolHelper.pkToAddress(ret);
+    }
+
+    /**
+     * @notice See {IERC721-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external {
+
+    }
+
+    /**
+     * @notice See {IERC721-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external {
+
+    }
+
+    /**
+     * @notice See {IERC721-transferFrom}.
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external {
+
+    }
+
+    /**
+     * @notice See {IERC721-approve}.
+     */
+    function approve(address /*to*/, uint256 /*tokenId*/) external {
+
+    }
+
+    /**
+     * @notice See {IERC721-setApprovalForAll}.
+     */
+    function setApprovalForAll(address /*operator*/, bool /*_approved*/) external {
+
+    }
+
+    /**
+     * @notice See {IERC721-getApproved}.
+     */
+    function getApproved(uint256 /*tokenId*/) external pure returns (address /*operator*/) {
+        revert("Forbidden");
+    }
+
+    /**
+     * @notice See {IERC721-isApprovedForAll}.
+     */
+    function isApprovedForAll(address /*owner*/, address /*operator*/) external pure returns (bool) {
+        return false;
+    }
+
+    /**
+     * @notice See {IERC721Metadata-name}.
+     */
+    function name() external view returns (string memory) {
+        return tokenName;
+    }
+
+    /**
+     * @notice See {IERC721Metadata-symbol}.
+     */
+    function symbol() external view returns (string memory) {
+        return tokenSymbol;
+    }
+
+    /**
+     * @notice See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) external view returns (string memory) {
+        bytes memory ret = omniverseOwners[tokenId];
+        require(keccak256(ret) != keccak256(bytes("")), "ERC721Metadata: URI query for nonexistent token");
+
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+    }
+
+    /**
+     * @notice Sets the base URI.
+     */
+    function setBaseURI(string calldata _baseURI) public {
+        baseURI = _baseURI;
     }
     
     /**
      * @notice Check if the transaction can be executed successfully
      */
     function _checkExecution(ERC6358TransactionData memory txData) internal view {
-        Fungible memory fungible = decodeData(txData.payload);
-        if (fungible.op == TRANSFER) {
-            _checkOmniverseTransfer(txData.from, fungible.amount);
+        NonFungible memory nonFungible = decodeData(txData.payload);
+        if (nonFungible.op == TRANSFER) {
+            _checkOmniverseTransfer(txData.from, nonFungible.tokenId);
         }
-        else if (fungible.op == MINT) {
+        else if (nonFungible.op == MINT) {
             _checkOwner(txData.from);
+            _checkOmniverseMint(nonFungible.tokenId);
         }
-        else if (fungible.op == BURN) {
+        else if (nonFungible.op == BURN) {
             _checkOwner(txData.from);
-            _checkOmniverseBurn(fungible.exData, fungible.amount);
+            _checkOmniverseBurn(nonFungible.exData, nonFungible.tokenId);
         }
         else {
             revert("OP code error");
@@ -165,7 +303,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     }
 
     /**
-     * @notice See {IERC6358Fungible-omniverseBalanceOf}
+     * @notice See {IERC6358NonFungible-omniverseBalanceOf}
      * Returns the omniverse balance of a user
      */
     function omniverseBalanceOf(bytes calldata _pk) external view override returns (uint256) {
@@ -173,16 +311,13 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     }
 
     /**
-     * @notice See {IERC20-balanceOf}.
+     * @notice See {IERC6358NonFungible-omniverseOwnerOf}
+     * Returns the owner of a token
      */
-    function balanceOf(address account) public view virtual override returns (uint256) {
-        bytes storage pk = accountsMap[account];
-        if (pk.length == 0) {
-            return 0;
-        }
-        else {
-            return omniverseBalances[pk];
-        }
+    function omniverseOwnerOf(uint256 _tokenId) external view returns (bytes memory) {
+        bytes memory ret = omniverseOwners[_tokenId];
+        require(keccak256(ret) != keccak256(bytes("")), "Token not exist");
+        return ret;
     }
 
     /**
@@ -231,28 +366,26 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     /**
      * @notice Check if an omniverse transfer operation can be executed successfully
      */
-    function _checkOmniverseTransfer(bytes memory _from, uint256 _amount) internal view {
-        uint256 fromBalance = omniverseBalances[_from];
-        require(fromBalance >= _amount, "Exceed balance");
+    function _checkOmniverseTransfer(bytes memory _from, uint256 _tokenId) internal view {
+        require(keccak256(this.omniverseOwnerOf(_tokenId)) == keccak256(_from), "Not owner");
     }
 
     /**
      * @notice Exucute an omniverse transfer operation
      */
-    function _omniverseTransfer(bytes memory _from, bytes memory _to, uint256 _amount) internal {
-        _checkOmniverseTransfer(_from, _amount);
+    function _omniverseTransfer(bytes memory _from, bytes memory _to, uint256 _tokenId) internal {
+        _checkOmniverseTransfer(_from, _tokenId);
         
-        uint256 fromBalance = omniverseBalances[_from];
-        
-        unchecked {
-            omniverseBalances[_from] = fromBalance - _amount;
-        }
-        omniverseBalances[_to] += _amount;
+        omniverseOwners[_tokenId] = _to;
+        omniverseBalances[_from] -= 1;
+        omniverseBalances[_to] += 1;
 
-        emit OmniverseTokenTransfer(_from, _to, _amount);
+        emit OmniverseTokenTransfer(_from, _to, _tokenId);
 
+        address fromAddr = OmniverseProtocolHelper.pkToAddress(_from);
         address toAddr = OmniverseProtocolHelper.pkToAddress(_to);
         accountsMap[toAddr] = _to;
+        emit Transfer(fromAddr, toAddr, _tokenId);
     }
     
     /**
@@ -264,30 +397,44 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     }
 
     /**
+     * @notice Check if an omniverse mint operation can be executed successfully
+     */
+    function _checkOmniverseMint(uint256 _tokenId) internal view {
+        require(keccak256(omniverseOwners[_tokenId]) == keccak256(""), "Token already exist");
+    }
+
+    /**
      * @notice Execute an omniverse mint operation
      */
-    function _omniverseMint(bytes memory _to, uint256 _amount) internal {
-        omniverseBalances[_to] += _amount;
-        emit OmniverseTokenTransfer("", _to, _amount);
+    function _omniverseMint(bytes memory _to, uint256 _tokenId) internal {
+        _checkOmniverseMint(_tokenId);
+
+        omniverseOwners[_tokenId] = _to;
+        omniverseBalances[_to] += 1;
+        emit OmniverseTokenTransfer("", _to, _tokenId);
 
         address toAddr = OmniverseProtocolHelper.pkToAddress(_to);
         accountsMap[toAddr] = _to;
+        emit Transfer(address(0), toAddr, _tokenId);
     }
 
     /**
      * @notice Check if an omniverse burn operation can be executed successfully
      */
-    function _checkOmniverseBurn(bytes memory _from, uint256 _amount) internal view {
-        uint256 fromBalance = omniverseBalances[_from];
-        require(fromBalance >= _amount, "Exceed balance");
+    function _checkOmniverseBurn(bytes memory _from, uint256 _tokenId) internal view {
+        require(keccak256(this.omniverseOwnerOf(_tokenId)) == keccak256(_from), "Not token owner");
     }
 
     /**
      * @notice Execute an omniverse burn operation
      */
-    function _omniverseBurn(bytes memory _from, uint256 _amount) internal {
-        omniverseBalances[_from] -= _amount;
-        emit OmniverseTokenTransfer(_from, "", _amount);
+    function _omniverseBurn(bytes memory _from, uint256 _tokenId) internal {
+        delete omniverseOwners[_tokenId];
+        omniverseBalances[_from] -= 1;
+        emit OmniverseTokenTransfer(_from, "", _tokenId);
+
+        address fromAddr = OmniverseProtocolHelper.pkToAddress(_from);
+        emit Transfer(fromAddr, address(0), _tokenId);
     }
 
     /**
@@ -314,23 +461,16 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     function getMembers() external view returns (Member[] memory) {
         return members;
     }
-    
-    /**
-     @notice See {IERC20-decimals}.
-     */
-    function decimals() public view virtual override returns (uint8) {
-        return 12;
-    }
 
     /**
-     * @notice See IERC6358Fungible
+     * @notice See IERC6358NonFungible
      */
     function getTransactionCount(bytes memory _pk) external override view returns (uint256) {
         return transactionRecorder[_pk].txList.length;
     }
 
     /**
-     * @notice See IERC6358Fungible
+     * @notice See IERC6358NonFungible
      */
     function getTransactionData(bytes calldata _user, uint256 _nonce) external override view returns (ERC6358TransactionData memory txData, uint256 timestamp) {
         RecordedCertificate storage rc = transactionRecorder[_user];
@@ -355,7 +495,7 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     }
 
     /**
-     * @notice See IERC6358Fungible
+     * @notice See IERC6358NonFungible
      */
     function getChainId() external view returns (uint32) {
         return chainId;
@@ -364,16 +504,16 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
     /**
      * @notice Decode `_data` from bytes to Fungible
      */
-    function decodeData(bytes memory _data) internal pure returns (Fungible memory) {
-        (uint8 op, bytes memory exData, uint256 amount) = abi.decode(_data, (uint8, bytes, uint256));
-        return Fungible(op, exData, amount);
+    function decodeData(bytes memory _data) internal pure returns (NonFungible memory) {
+        (uint8 op, bytes memory exData, uint256 tokenId) = abi.decode(_data, (uint8, bytes, uint256));
+        return NonFungible(op, exData, tokenId);
     }
 
     /**
      * @notice See IERC6358Application
      */
     function getPayloadRawData(bytes memory _payload) external pure returns (bytes memory) {
-        Fungible memory fungible = decodeData(_payload);
-        return abi.encodePacked(fungible.op, fungible.exData, uint128(fungible.amount));
+        NonFungible memory nonFungible = decodeData(_payload);
+        return abi.encodePacked(nonFungible.op, nonFungible.exData, uint128(nonFungible.tokenId));
     }
 }

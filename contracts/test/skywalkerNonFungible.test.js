@@ -8,8 +8,7 @@ const web3js = new Web3(providerUrl);
 const assert = require('assert');
 
 const CHAIN_ID = 0;
-const ONE_TOKEN = '1000000000000000000';
-const TEN_TOKEN = '10000000000000000000';
+const TOKEN_ID = 1;
 const TOKEN_SYMBOL = 'skywalker';
 const COOL_DOWN = 2;
 
@@ -17,13 +16,13 @@ const TRANSFER = 0;
 const MINT = 1;
 const BURN = 2;
 
-const Fungible = artifacts.require('./MockFungible.sol');
+const NonFungible = artifacts.require('./SkywalkerNonFungible.sol');
 const OmniverseProtocolHelper = artifacts.require('./OmniverseProtocolHelper.sol');
-Fungible.defaults({
+NonFungible.defaults({
     gas: 8000000,
 });
 
-Fungible.numberFormat = 'String';
+NonFungible.numberFormat = 'String';
 
 const owner = '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA';
 const user1 = '0xc0d8F541Ab8B71F20c10261818F2F401e8194049';
@@ -58,71 +57,71 @@ let getRawData = (txData, op, params) => {
     return ret;
 }
 
-let encodeMint = (from, toPk, amount, nonce) => {
+let encodeMint = (from, toPk, tokenId, nonce) => {
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
-        initiateSC: Fungible.address,
+        initiateSC: NonFungible.address,
         from: from.pk,
-        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, toPk, tokenId])
     }
-    let bData = getRawData(txData, MINT, [toPk, amount]);
+    let bData = getRawData(txData, MINT, [toPk, tokenId]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
 
-let encodeBurn = (from, toPk, amount, nonce) => {
+let encodeBurn = (from, toPk, tokenId, nonce) => {
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
-        initiateSC: Fungible.address,
+        initiateSC: NonFungible.address,
         from: from.pk,
-        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [BURN, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [BURN, toPk, tokenId])
     }
-    let bData = getRawData(txData, BURN, [toPk, amount]);
+    let bData = getRawData(txData, BURN, [toPk, tokenId]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
 
-let encodeTransfer = (from, toPk, amount, nonce) => {
+let encodeTransfer = (from, toPk, tokenId, nonce) => {
     let txData = {
         nonce: nonce,
         chainId: CHAIN_ID,
-        initiateSC: Fungible.address,
+        initiateSC: NonFungible.address,
         from: from.pk,
-        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, toPk, amount])
+        payload: web3js.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, toPk, tokenId])
     }
-    let bData = getRawData(txData, TRANSFER, [toPk, amount]);
+    let bData = getRawData(txData, TRANSFER, [toPk, tokenId]);
     let hash = keccak256(bData);
     txData.signature = signData(hash, from.sk);
     return txData;
 }
     
-contract('SkywalkerFungible', function() {
+contract('SkywalkerNonFungible', function() {
     before(async function() {
         await initContract();
     });
 
-    let fungible;
+    let nonFungible;
 
     let initContract = async function() {
         let protocol = await OmniverseProtocolHelper.new();
-        Fungible.link(protocol);
-        fungible = await Fungible.new(CHAIN_ID, TOKEN_SYMBOL, TOKEN_SYMBOL, {from: owner});
-        Fungible.address = fungible.address;
-        await fungible.setMembers([[CHAIN_ID, Fungible.address]]);
-        await fungible.setCoolingDownTime(COOL_DOWN);
+        NonFungible.link(protocol);
+        nonFungible = await NonFungible.new(CHAIN_ID, TOKEN_SYMBOL, TOKEN_SYMBOL, {from: owner});
+        NonFungible.address = nonFungible.address;
+        await nonFungible.setMembers([[CHAIN_ID, NonFungible.address]]);
+        await nonFungible.setCoolingDownTime(COOL_DOWN);
     }
 
-    const mintToken = async function(from, toPk, amount) {
-        let nonce = await fungible.getTransactionCount(from.pk);
-        let txData = encodeMint(from, toPk, amount, nonce);
-        await fungible.sendOmniverseTransaction(txData);
+    const mintToken = async function(from, toPk, tokenId) {
+        let nonce = await nonFungible.getTransactionCount(from.pk);
+        let txData = encodeMint(from, toPk, tokenId, nonce);
+        await nonFungible.sendOmniverseTransaction(txData);
         await utils.sleep(COOL_DOWN);
         await utils.evmMine(1, web3js.currentProvider);
-        let ret = await fungible.triggerExecution();
+        let ret = await nonFungible.triggerExecution();
     }
     
     describe('Verify transaction', function() {
@@ -132,60 +131,60 @@ contract('SkywalkerFungible', function() {
 
         describe('Signature error', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 txData.signature = txData.signature.slice(0, -2);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Signature error');
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Signature error');
             });
         });
 
         describe('Sender not signer', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 txData.from = ownerPk;
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Signature error');
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Signature error');
             });
         });
 
         describe('Nonce error', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk) + 20;
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Nonce error');
+                let nonce = await nonFungible.getTransactionCount(user1Pk) + 20;
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Nonce error');
             });
         });
 
         describe('All conditions satisfied', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                let ret = await fungible.sendOmniverseTransaction(txData);
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                let ret = await nonFungible.sendOmniverseTransaction(txData);
                 assert(ret.logs[0].event == 'TransactionSent');
-                let count = await fungible.getTransactionCount(ownerPk);
+                let count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 0, "The count should be zero");
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                ret = await fungible.triggerExecution();
-                count = await fungible.getTransactionCount(ownerPk);
+                ret = await nonFungible.triggerExecution();
+                count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 1, "The count should be one");
             });
         });
 
         describe('Cooling down', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Transaction cached');
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID + 1, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Transaction cached');
             });
         });
 
         describe('Transaction duplicated', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk) - 1;
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                let ret = await fungible.sendOmniverseTransaction(txData);
+                let nonce = await nonFungible.getTransactionCount(ownerPk) - 1;
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                let ret = await nonFungible.sendOmniverseTransaction(txData);
                 assert(ret.logs[0].event == 'TransactionExecuted');
             });
         });
@@ -194,26 +193,26 @@ contract('SkywalkerFungible', function() {
             it('should succeed', async () => {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                let nonce = await fungible.getTransactionCount(ownerPk);
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                ret = await fungible.triggerExecution();
-                let count = await fungible.getTransactionCount(ownerPk);
+                ret = await nonFungible.triggerExecution();
+                let count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 2);
             });
         });
 
         describe('Malicious', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk) - 1;
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TEN_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
-                let malicious = await fungible.isMalicious(ownerPk);
+                let nonce = await nonFungible.getTransactionCount(ownerPk) - 1;
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID + 1, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
+                let malicious = await nonFungible.isMalicious(ownerPk);
                 assert(malicious, "It should be malicious");
             });
         });
     });
-    
+
     describe('Personal signing', function() {
         before(async function() {
             await initContract();
@@ -221,19 +220,19 @@ contract('SkywalkerFungible', function() {
 
         describe('All conditions satisfied', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                let bData = getRawData(txData, MINT, [user2Pk, TEN_TOKEN]);
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                let bData = getRawData(txData, MINT, [user2Pk, TOKEN_ID]);
                 let hash = keccak256(Buffer.concat([Buffer.from('\x19Ethereum Signed Message:\n' + bData.length), bData]));
                 txData.signature = signData(hash, ownerSk);
-                let ret = await fungible.sendOmniverseTransaction(txData);
+                let ret = await nonFungible.sendOmniverseTransaction(txData);
                 assert(ret.logs[0].event == 'TransactionSent');
-                let count = await fungible.getTransactionCount(ownerPk);
+                let count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 0, "The count should be zero");
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                ret = await fungible.triggerExecution();
-                count = await fungible.getTransactionCount(ownerPk);
+                ret = await nonFungible.triggerExecution();
+                count = await nonFungible.getTransactionCount(ownerPk);
                 assert(count == 1, "The count should be one");
             });
         });
@@ -246,41 +245,41 @@ contract('SkywalkerFungible', function() {
     
         describe('Wrong initiate smart contract', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
                 txData.initiateSC = user1;
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Wrong initiateSC');
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Wrong initiateSC');
             });
         });
     
         describe('All conditions satisfied', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
-                let count = await fungible.getDelayedTxCount();
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
+                let count = await nonFungible.getDelayedTxCount();
                 assert(count == 1, 'The number of delayed txs should be one');
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                ret = await fungible.triggerExecution();
+                ret = await nonFungible.triggerExecution();
             });
         });
     
         describe('Malicious transaction', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk) - 1;
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TEN_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
-                let count = await fungible.getDelayedTxCount();
+                let nonce = await nonFungible.getTransactionCount(ownerPk) - 1;
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
+                let count = await nonFungible.getDelayedTxCount();
                 assert(count == 0, 'The number of delayed txs should be zero');
             });
         });
     
         describe('User is malicious', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'User malicious');
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'User malicious');
             });
         });
     });
@@ -288,14 +287,14 @@ contract('SkywalkerFungible', function() {
     describe('Get executable delayed transaction', function() {
         before(async function() {
             await initContract();
-            let nonce = await fungible.getTransactionCount(ownerPk);
-            let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-            await fungible.sendOmniverseTransaction(txData);
+            let nonce = await nonFungible.getTransactionCount(ownerPk);
+            let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+            await nonFungible.sendOmniverseTransaction(txData);
         });
 
         describe('Cooling down', function() {
             it('should be none', async () => {
-                let tx = await fungible.getExecutableDelayedTx();
+                let tx = await nonFungible.getExecutableDelayedTx();
                 assert(tx.sender == '0x', 'There should be no transaction');
             });
         });
@@ -304,7 +303,7 @@ contract('SkywalkerFungible', function() {
             it('should be one transaction', async () => {
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                let tx = await fungible.getExecutableDelayedTx();
+                let tx = await nonFungible.getExecutableDelayedTx();
                 assert(tx.sender == ownerPk, 'There should be one transaction');
             });
         });
@@ -317,16 +316,16 @@ contract('SkywalkerFungible', function() {
 
         describe('No delayed transaction', function() {
             it('should fail', async () => {
-                await utils.expectThrow(fungible.triggerExecution(), 'No delayed tx');
+                await utils.expectThrow(nonFungible.triggerExecution(), 'No delayed tx');
             });
         });
 
         describe('Not executable', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
-                await utils.expectThrow(fungible.triggerExecution(), 'Not executable');
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
+                await utils.expectThrow(nonFungible.triggerExecution(), 'Not executable');
             });
         });
     });
@@ -338,23 +337,25 @@ contract('SkywalkerFungible', function() {
 
         describe('Not owner', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeMint({pk: user2Pk, sk: user2Sk}, user1Pk, ONE_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), "Not owner");
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeMint({pk: user2Pk, sk: user2Sk}, user1Pk, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), "Not owner");
             });
         });
 
         describe('Is owner', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                let ret = await fungible.triggerExecution();
+                let ret = await nonFungible.triggerExecution();
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
-                let balance = await fungible.omniverseBalanceOf(user1Pk);
-                assert(ONE_TOKEN == balance, 'Balance should be one');
+                let tokenOwner = await nonFungible.omniverseOwnerOf(TOKEN_ID);
+                assert(user1Pk == tokenOwner, 'Owner should be user1');
+                let balance = await nonFungible.omniverseBalanceOf(user1Pk);
+                assert(TOKEN_ID == balance, 'Balance should be one');
             });
         });
     });
@@ -362,35 +363,36 @@ contract('SkywalkerFungible', function() {
     describe('Burn', function() {
         before(async function() {
             await initContract();
-            await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
+            await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID);
         });
 
         describe('Not owner', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeBurn({pk: user2Pk, sk: user2Sk}, user1Pk, ONE_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), "Not owner");
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeBurn({pk: user2Pk, sk: user2Sk}, user1Pk, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), "Not owner");
             });
         });
 
-        describe('Exceed balance', function() {
+        describe('Token not exist', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeBurn({pk: ownerPk, sk: ownerSk}, user1Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), "Exceed balance");
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeBurn({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID + 1, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), "Token not exist");
             });
         });
 
         describe('All conditions satisfied', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(ownerPk);
-                let txData = encodeBurn({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
+                let nonce = await nonFungible.getTransactionCount(ownerPk);
+                let txData = encodeBurn({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                let ret = await fungible.triggerExecution();
+                let ret = await nonFungible.triggerExecution();
+                await utils.expectThrow(nonFungible.omniverseOwnerOf(TOKEN_ID), "Token not exist");
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
-                let balance = await fungible.omniverseBalanceOf(user1Pk);
+                let balance = await nonFungible.omniverseBalanceOf(user1Pk);
                 assert(0 == balance, 'Balance should be zero');
             });
         });
@@ -399,30 +401,32 @@ contract('SkywalkerFungible', function() {
     describe('Transfer', function() {
         before(async function() {
             await initContract();
-            await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
+            await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID);
         });
 
-        describe('Exceed balance', function() {
+        describe('Not token owner', function() {
             it('should fail', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TEN_TOKEN, nonce);
-                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Exceed balance');
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user2Pk, sk: user2Sk}, user2Pk, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Not owner');
             });
         });
 
         describe('Balance enough', function() {
             it('should succeed', async () => {
-                let nonce = await fungible.getTransactionCount(user1Pk);
-                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, ONE_TOKEN, nonce);
-                await fungible.sendOmniverseTransaction(txData);
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2Pk, TOKEN_ID, nonce);
+                await nonFungible.sendOmniverseTransaction(txData);
                 await utils.sleep(COOL_DOWN);
                 await utils.evmMine(1, web3js.currentProvider);
-                let ret = await fungible.triggerExecution();
+                let ret = await nonFungible.triggerExecution();
                 assert(ret.logs[0].event == 'OmniverseTokenTransfer');
-                let balance = await fungible.omniverseBalanceOf(user1Pk);
+                let tokenOwner = await nonFungible.omniverseOwnerOf(TOKEN_ID);
+                assert(user2Pk == tokenOwner, 'Token owner should be user2');
+                let balance = await nonFungible.omniverseBalanceOf(user1Pk);
                 assert('0' == balance, 'Balance should be zero');
-                balance = await fungible.omniverseBalanceOf(user2Pk);
-                assert(ONE_TOKEN == balance, 'Balance should be one');
+                balance = await nonFungible.omniverseBalanceOf(user2Pk);
+                assert(TOKEN_ID == balance, 'Balance should be one');
             });
         });
     });
