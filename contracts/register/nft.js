@@ -166,14 +166,27 @@ async function getNonce(pk) {
 }
 
 async function omniverseBalanceOf(pk) {
+    let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'omniverseBalanceOf', [pk]);
+    console.log('amount', amount);
+}
+
+async function getOtherInformation(pk) {
     let nonce = await ethereum.contractCall(skywalkerNonFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerNonFungibleContract, 'omniverseBalanceOf', [pk]);
     let members = await ethereum.contractCall(skywalkerNonFungibleContract, 'getMembers', []);
-    let isMalicious = await ethereum.contractCall(skywalkerNonFungibleContract, 'isMalicious', [pk]);    
+    let owner = await ethereum.contractCall(skywalkerNonFungibleContract, 'owner', []);
+    let delayedCount = await ethereum.contractCall(skywalkerNonFungibleContract, 'getDelayedTxCount', []);
+    let tx = await ethereum.contractCall(skywalkerNonFungibleContract, 'getExecutableDelayedTx', []);
+    let cdTime = await ethereum.contractCall(skywalkerNonFungibleContract, 'cdTime', []);
+    let cache = await ethereum.contractCall(skywalkerNonFungibleContract, 'transactionCache', [pk]);
     console.log('nonce', nonce);
     console.log('amount', amount);
     console.log('members', members);
-    console.log('isMalicious', isMalicious);
+    console.log('owner', owner);
+    console.log('delayedCount', delayedCount);
+    console.log('tx', tx);
+    console.log('cdTime', cdTime);
+    console.log('cache', cache);
 }
 
 async function balanceOf(address) {
@@ -211,6 +224,7 @@ async function ownerOf(tokenId) {
         .option('-s, --switch <index>', 'Switch the index of private key to be used')
         .option('-sc, --sync <chain name>,<to chain>,<pk>', 'Sync messages from one to the other chain', list)
         .option('-n, --nonce <chain name>,<pk>', 'Nonce of a pk on a chain', list)
+        .option('--other <chain name>,<pk>', 'Get other information of an account', list)
         .parse(process.argv);
 
     if (program.opts().initialize) {
@@ -354,6 +368,17 @@ async function ownerOf(tokenId) {
             return;
         }
         await getNonce(program.opts().nonce[1]);
+    }
+    else if (program.opts().other) {
+        if (program.opts().other.length != 2) {
+            console.log('2 arguments are needed, but ' + program.opts().other.length + ' provided');
+            return;
+        }
+        
+        if (!init(program.opts().other[0])) {
+            return;
+        }
+        await getOtherInformation(program.opts().other[1]);
     }
     else if (program.opts().switch) {
         secret.index = parseInt(program.opts().switch);
