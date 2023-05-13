@@ -223,7 +223,6 @@ async function getOtherInformation(pk) {
     let delayedCount = await ethereum.contractCall(skywalkerFungibleContract, 'getDelayedTxCount', []);
     let tx = await ethereum.contractCall(skywalkerFungibleContract, 'getExecutableDelayedTx', []);
     let cdTime = await ethereum.contractCall(skywalkerFungibleContract, 'cdTime', []);
-    let ts = await ethereum.contractCall(skywalkerFungibleContract, 'getTimeStamp', []);
     let cache = await ethereum.contractCall(skywalkerFungibleContract, 'transactionCache', [pk]);
     console.log('nonce', nonce);
     console.log('amount', amount);
@@ -233,7 +232,6 @@ async function getOtherInformation(pk) {
     console.log('tx', tx);
     console.log('cdTime', cdTime);
     console.log('cache', cache);
-    console.log('ts', ts);
 }
 
 async function balanceOf(address) {
