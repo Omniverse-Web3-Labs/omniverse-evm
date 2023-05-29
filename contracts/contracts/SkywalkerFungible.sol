@@ -216,12 +216,10 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
             cache.txData = _data;
             cache.timestamp = block.timestamp;
             delayedTxs.push(DelayedTx(_data.from, _data.nonce));
-            if (_data.chainId == chainId) {
-                emit TransactionSent(_data.from, _data.nonce);
-            }
+            emit TransactionSent(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Duplicated) {
-            emit TransactionExecuted(_data.from, _data.nonce);
+            emit TransactionDuplicated(_data.from, _data.nonce);
         }
         else if (verifyRet == VerifyResult.Malicious) {
             // Slash

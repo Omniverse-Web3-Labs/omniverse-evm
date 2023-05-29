@@ -186,7 +186,7 @@ contract('SkywalkerFungible', function() {
                 let nonce = await fungible.getTransactionCount(ownerPk) - 1;
                 let txData = encodeMint({pk: ownerPk, sk: ownerSk}, user2Pk, TEN_TOKEN, nonce);
                 let ret = await fungible.sendOmniverseTransaction(txData);
-                assert(ret.logs[0].event == 'TransactionExecuted');
+                assert(ret.logs[0].event == 'TransactionDuplicated');
             });
         });
 

@@ -211,14 +211,27 @@ async function approveDeposit(index) {
 }
 
 async function omniverseBalanceOf(pk) {
+    let amount = await ethereum.contractCall(skywalkerFungibleContract, 'omniverseBalanceOf', [pk]);
+    console.log('amount', amount);
+}
+
+async function getOtherInformation(pk) {
     let nonce = await ethereum.contractCall(skywalkerFungibleContract, 'getTransactionCount', [pk]);
     let amount = await ethereum.contractCall(skywalkerFungibleContract, 'omniverseBalanceOf', [pk]);
     let members = await ethereum.contractCall(skywalkerFungibleContract, 'getMembers', []);
     let owner = await ethereum.contractCall(skywalkerFungibleContract, 'owner', []);
+    let delayedCount = await ethereum.contractCall(skywalkerFungibleContract, 'getDelayedTxCount', []);
+    let tx = await ethereum.contractCall(skywalkerFungibleContract, 'getExecutableDelayedTx', []);
+    let cdTime = await ethereum.contractCall(skywalkerFungibleContract, 'cdTime', []);
+    let cache = await ethereum.contractCall(skywalkerFungibleContract, 'transactionCache', [pk]);
     console.log('nonce', nonce);
     console.log('amount', amount);
     console.log('members', members);
     console.log('owner', owner);
+    console.log('delayedCount', delayedCount);
+    console.log('tx', tx);
+    console.log('cdTime', cdTime);
+    console.log('cache', cache);
 }
 
 async function balanceOf(address) {
@@ -249,6 +262,7 @@ async function balanceOf(address) {
         .option('-s, --switch <index>', 'Switch the index of private key to be used')
         .option('-sc, --sync <chain name>,<to chain>,<pk>', 'Sync messages from one to the other chain', list)
         .option('-n, --nonce <chain name>,<pk>', 'Nonce of a pk on a chain', list)
+        .option('--other <chain name>,<pk>', 'Get other information of an account', list)
         .parse(process.argv);
 
     if (program.opts().initialize) {
@@ -425,6 +439,17 @@ async function balanceOf(address) {
             return;
         }
         await getAllowance(program.opts().approval[1], program.opts().approval[2]);
+    }
+    else if (program.opts().other) {
+        if (program.opts().other.length != 2) {
+            console.log('2 arguments are needed, but ' + program.opts().other.length + ' provided');
+            return;
+        }
+        
+        if (!init(program.opts().other[0])) {
+            return;
+        }
+        await getOtherInformation(program.opts().other[1]);
     }
     else if (program.opts().switch) {
         secret.index = parseInt(program.opts().switch);
