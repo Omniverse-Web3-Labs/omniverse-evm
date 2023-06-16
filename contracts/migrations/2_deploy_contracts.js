@@ -3,16 +3,7 @@ const SkywalkerFungible = artifacts.require("SkywalkerFungible");
 const SkywalkerNonFungible = artifacts.require("SkywalkerNonFungible");
 const fs = require("fs");
 
-const CHAIN_IDS = {
-  BSCTEST: 0,
-  SUBSTRATE: 1,
-  GOERLI: 2,
-  MOONBASEALPHA: 3,
-  PLATON: 4,
-  SEPOLIA: 5,
-  MUMBAI: 6,
-  MOCK: 10000,
-};
+const CHAIN_IDS = {"CHAIN1":{"tokenInfo":[{"name":"SKYWALKER","symbol":"SKYWALKER"}],"omniverseChainId":1,"contractType":"ft"},"CHAIN2":{"tokenInfo":[{"name":"SKYWALKER","symbol":"SKYWALKER"}],"omniverseChainId":2,"contractType":"ft"}};
 
 module.exports = async function (deployer, network) {
   const contractAddressFile = './config/default.json';
@@ -24,17 +15,25 @@ module.exports = async function (deployer, network) {
   }
 
   await deployer.deploy(OmniverseProtocolHelper);
-  await deployer.link(OmniverseProtocolHelper, SkywalkerFungible);
-  await deployer.link(OmniverseProtocolHelper, SkywalkerNonFungible);
-  await deployer.deploy(SkywalkerFungible, CHAIN_IDS[network], "SKYWALKER", "SW");
-  await deployer.deploy(SkywalkerNonFungible, CHAIN_IDS[network], "SKYWALKER", "SW");
-
-  // Update config
-  if (network.indexOf('-fork') != -1 || network == 'test' || network == 'development') {
-    return;
+  let chain = CHAIN_IDS[network];
+  if (chain.contractType == 'ft') {
+    await deployer.link(OmniverseProtocolHelper, SkywalkerFungible);
+    for (let tokenInfo of chain.tokenInfo) {
+      await deployer.deploy(SkywalkerFungible, chain.omniverseChainId, tokenInfo.name, tokenInfo.symbol);
+      let address = jsonData[network].skywalkerFungibleAddress;
+      address = address ? address : {};
+      address[tokenInfo.name] = SkywalkerFungible.address;
+      jsonData[network].skywalkerFungibleAddress = address;
+    }
+  } else {
+    await deployer.link(OmniverseProtocolHelper, SkywalkerNonFungible);;
+    for (let tokenInfo of chain.tokenInfo) {
+      await deployer.deploy(SkywalkerNonFungible, chain.omniverseChainId, tokenInfo.name, tokenInfo.symbol)
+      let address = jsonData[network].skywalkerNonFungibleAddress;
+      address = address ? address : {};
+      address[tokenInfo.name] = SkywalkerNonFungible.address;
+      jsonData[network].skywalkerNonFungibleAddress = address;
+    }
   }
-
-  jsonData[network].skywalkerFungibleAddress = SkywalkerFungible.address;
-  jsonData[network].skywalkerNonFungibleAddress = SkywalkerNonFungible.address;
   fs.writeFileSync(contractAddressFile, JSON.stringify(jsonData, null, '\t'));
 };

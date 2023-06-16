@@ -33,14 +33,18 @@ let publicKey = '0x' + publicKeyBuffer.toString('hex').slice(2);
 // the forth account pk: 0x20c7141c90c2346eae1c07e739222ae815b7fa839ea7931e27340bedb3603c70dd9926c3a089ddfd84acfd6c701b3a043f10f9f57c68140e4686cf38d779d5a4
 // the forth account address: 0x78c13EB6810B3a0ccee6A347295E7F5902EaFAAe
 
-function _init(chainName) {
+function _init(chainName, tokenId) {
     let netConfig = config.get(chainName);
     if (!netConfig) {
         console.log('Config of chain (' + chainName + ') not exists');
         return [false];
     }
-
-    let skywalkerFungibleAddress = netConfig.skywalkerFungibleAddress;
+    let skywalkerFungibleAddress;
+    if (tokenId) {
+        skywalkerFungibleAddress = netConfig.skywalkerFungibleAddress[tokenId];
+    } else {
+        skywalkerFungibleAddress = netConfig.skywalkerFungibleAddress;
+    }
     // Load contract abi, and init contract object
     const skywalkerFungibleRawData = fs.readFileSync('./build/contracts/SkywalkerFungible.json');
     const skywalkerFungibleAbi = JSON.parse(skywalkerFungibleRawData).abi;
@@ -53,8 +57,8 @@ function _init(chainName) {
     return [true, web3, skywalkerFungibleContract, chainId, netConfig];
 }
 
-function init(chainName) {
-    let ret = _init(chainName);
+function init(chainName, tokenId) {
+    let ret = _init(chainName, tokenId);
 
     if (ret[0]) {
         web3 = ret[1];
@@ -98,7 +102,7 @@ async function mint(to, amount) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: skywalkerFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, to, amount]),
     };
@@ -114,7 +118,7 @@ async function transfer(to, amount) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: skywalkerFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, to, amount]),
     };
@@ -159,8 +163,8 @@ async function getDepositRequest(index) {
     console.log(ret);
 }
 
-async function sync(toChain, pk) {
-    let toChainInfo = _init(toChain);
+async function sync(toChain, pk, tokenId) {
+    let toChainInfo = _init(toChain, tokenId);
     if (!toChainInfo[0]) {
         console.log('error init', toChain);
         return;
@@ -263,15 +267,17 @@ async function balanceOf(address) {
         .option('-sc, --sync <chain name>,<to chain>,<pk>', 'Sync messages from one to the other chain', list)
         .option('-n, --nonce <chain name>,<pk>', 'Nonce of a pk on a chain', list)
         .option('--other <chain name>,<pk>', 'Get other information of an account', list)
+        .option('-ti, --tokenId <token id>', 'tokenId for multi contracts')
         .parse(process.argv);
 
+    let tokenId = program.opts().tokenId;
     if (program.opts().initialize) {
         if (program.opts().initialize.length <= 1) {
             console.log('At least 2 arguments are needed');
             return;
         }
         
-        if (!init(program.opts().initialize[0])) {
+        if (!init(program.opts().initialize[0], tokenId)) {
             return;
         }
 
@@ -292,7 +298,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().withdraw[0])) {
+        if (!init(program.opts().withdraw[0], tokenId)) {
             return;
         }
         await withdraw(program.opts().withdraw[1]);
@@ -303,7 +309,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().transfer[0])) {
+        if (!init(program.opts().transfer[0], tokenId)) {
             return;
         }
         await transfer(program.opts().transfer[1], program.opts().transfer[2]);
@@ -314,7 +320,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().approve_deposit[0])) {
+        if (!init(program.opts().approve_deposit[0], tokenId)) {
             return;
         }
         await approveDeposit(program.opts().approve_deposit[1]);
@@ -325,7 +331,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().deposit[0])) {
+        if (!init(program.opts().deposit[0], tokenId)) {
             return;
         }
         await deposit(program.opts().deposit[1], program.opts().deposit[2]);
@@ -336,7 +342,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().deposit_request[0])) {
+        if (!init(program.opts().deposit_request[0], tokenId)) {
             return;
         }
         await getDepositRequest(program.opts().deposit_request[1]);
@@ -347,7 +353,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().mint[0])) {
+        if (!init(program.opts().mint[0], tokenId)) {
             return;
         }
         await mint(program.opts().mint[1], program.opts().mint[2]);
@@ -358,7 +364,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().burn[0])) {
+        if (!init(program.opts().burn[0], tokenId)) {
             return;
         }
         await burn(program.opts().burn[1], program.opts().burn[2]);
@@ -369,7 +375,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().omniBalance[0])) {
+        if (!init(program.opts().omniBalance[0], tokenId)) {
             return;
         }
         await omniverseBalanceOf(program.opts().omniBalance[1]);
@@ -380,7 +386,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().balance[0])) {
+        if (!init(program.opts().balance[0], tokenId)) {
             return;
         }
         await balanceOf(program.opts().balance[1]);
@@ -391,7 +397,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().trigger[0])) {
+        if (!init(program.opts().trigger[0], tokenId)) {
             return;
         }
         await trigger();
@@ -402,7 +408,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().delayed[0])) {
+        if (!init(program.opts().delayed[0], tokenId)) {
             return;
         }
         await getDelayedTx();
@@ -413,10 +419,10 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().sync[0])) {
+        if (!init(program.opts().sync[0], tokenId)) {
             return;
         }
-        await sync(program.opts().sync[1], program.opts().sync[2]);
+        await sync(program.opts().sync[1], program.opts().sync[2], tokenId);
     }
     else if (program.opts().nonce) {
         if (program.opts().nonce.length != 2) {
@@ -424,7 +430,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().nonce[0])) {
+        if (!init(program.opts().nonce[0], tokenId)) {
             return;
         }
         await getNonce(program.opts().nonce[1]);
@@ -435,7 +441,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().approval[0])) {
+        if (!init(program.opts().approval[0], tokenId)) {
             return;
         }
         await getAllowance(program.opts().approval[1], program.opts().approval[2]);
@@ -446,7 +452,7 @@ async function balanceOf(address) {
             return;
         }
         
-        if (!init(program.opts().other[0])) {
+        if (!init(program.opts().other[0], tokenId)) {
             return;
         }
         await getOtherInformation(program.opts().other[1]);

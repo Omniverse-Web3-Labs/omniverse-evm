@@ -33,14 +33,19 @@ let publicKey = '0x' + publicKeyBuffer.toString('hex').slice(2);
 // the forth account pk: 0xfb73e1e37a4999060a9a9b1e38a12f8a7c24169caa39a2fb304dc3506dd2d797f8d7e4dcd28692ae02b7627c2aebafb443e9600e476b465da5c4dddbbc3f2782
 // the forth account address: 0x04e5d0f5478849C94F02850bFF91113d8F02864D
 
-function _init(chainName) {
+function _init(chainName, oTokenId) {
     let netConfig = config.get(chainName);
     if (!netConfig) {
         console.log('Config of chain (' + chainName + ') not exists');
         return [false];
     }
 
-    let skywalkerNonFungibleAddress = netConfig.skywalkerNonFungibleAddress;
+    let skywalkerNonFungibleAddress;
+    if (oTokenId) {
+        skywalkerNonFungibleAddress = netConfig.skywalkerNonFungibleAddress[oTokenId];
+    } else {
+        skywalkerNonFungibleAddress = netConfig.skywalkerNonFungibleAddress;
+    }
     // Load contract abi, and init contract object
     const skywalkerNonFungibleRawData = fs.readFileSync('./build/contracts/SkywalkerNonFungible.json');
     const skywalkerNonFungibleAbi = JSON.parse(skywalkerNonFungibleRawData).abi;
@@ -53,8 +58,8 @@ function _init(chainName) {
     return [true, web3, skywalkerNonFungibleContract, chainId, netConfig];
 }
 
-function init(chainName) {
-    let ret = _init(chainName);
+function init(chainName, oTokenId) {
+    let ret = _init(chainName, oTokenId);
 
     if (ret[0]) {
         web3 = ret[1];
@@ -99,7 +104,7 @@ async function mint(to, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerNonFungibleAddress,
+        initiateSC: skywalkerNonFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [MINT, to, tokenId]),
     };
@@ -115,7 +120,7 @@ async function transfer(to, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerNonFungibleAddress,
+        initiateSC: skywalkerNonFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [TRANSFER, to, tokenId]),
     };
@@ -130,7 +135,7 @@ async function burn(from, tokenId) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerNonFungibleAddress,
+        initiateSC: skywalkerNonFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [BURN, from, tokenId]),
     };
@@ -224,16 +229,18 @@ async function ownerOf(tokenId) {
         .option('-s, --switch <index>', 'Switch the index of private key to be used')
         .option('-sc, --sync <chain name>,<to chain>,<pk>', 'Sync messages from one to the other chain', list)
         .option('-n, --nonce <chain name>,<pk>', 'Nonce of a pk on a chain', list)
+        .option('-ti, --oTokenId <oTokenId>', 'The omniverse token id', list)
         .option('--other <chain name>,<pk>', 'Get other information of an account', list)
         .parse(process.argv);
 
+    let oTokenId = program.opts().oTokenId;
     if (program.opts().initialize) {
         if (program.opts().initialize.length <= 1) {
             console.log('At least 2 arguments are needed');
             return;
         }
         
-        if (!init(program.opts().initialize[0])) {
+        if (!init(program.opts().initialize[0], oTokenId)) {
             return;
         }
 
@@ -254,7 +261,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().transfer[0])) {
+        if (!init(program.opts().transfer[0], oTokenId)) {
             return;
         }
         await transfer(program.opts().transfer[1], program.opts().transfer[2]);
@@ -265,7 +272,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().mint[0])) {
+        if (!init(program.opts().mint[0], oTokenId)) {
             return;
         }
         await mint(program.opts().mint[1], program.opts().mint[2]);
@@ -276,7 +283,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().burn[0])) {
+        if (!init(program.opts().burn[0], oTokenId)) {
             return;
         }
         await burn(program.opts().burn[1], program.opts().burn[2]);
@@ -287,7 +294,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().omniBalance[0])) {
+        if (!init(program.opts().omniBalance[0], oTokenId)) {
             return;
         }
         await omniverseBalanceOf(program.opts().omniBalance[1]);
@@ -298,7 +305,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().balance[0])) {
+        if (!init(program.opts().balance[0], oTokenId)) {
             return;
         }
         await balanceOf(program.opts().balance[1]);
@@ -309,7 +316,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().omniOwner[0])) {
+        if (!init(program.opts().omniOwner[0], oTokenId)) {
             return;
         }
         await omniverseOwnerOf(program.opts().omniOwner[1]);
@@ -320,7 +327,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().owner[0])) {
+        if (!init(program.opts().owner[0], oTokenId)) {
             return;
         }
         await ownerOf(program.opts().owner[1]);
@@ -331,7 +338,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().trigger[0])) {
+        if (!init(program.opts().trigger[0], oTokenId)) {
             return;
         }
         await trigger();
@@ -342,7 +349,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().delayed[0])) {
+        if (!init(program.opts().delayed[0], oTokenId)) {
             return;
         }
         await getDelayedTx();
@@ -353,7 +360,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().sync[0])) {
+        if (!init(program.opts().sync[0], oTokenId)) {
             return;
         }
         await sync(program.opts().sync[1], program.opts().sync[2]);
@@ -364,7 +371,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().nonce[0])) {
+        if (!init(program.opts().nonce[0], oTokenId)) {
             return;
         }
         await getNonce(program.opts().nonce[1]);
@@ -375,7 +382,7 @@ async function ownerOf(tokenId) {
             return;
         }
         
-        if (!init(program.opts().other[0])) {
+        if (!init(program.opts().other[0], oTokenId)) {
             return;
         }
         await getOtherInformation(program.opts().other[1]);

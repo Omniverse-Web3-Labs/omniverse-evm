@@ -1,34 +1,46 @@
 {
-	"BSCTEST": {
-		"nodeAddress": "https://bsc-testnet.public.blastapi.io",
-		"chainId": 97,
-		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x12B22989407C8E6C69df5477AbD7b569b024Aba0",
-		"skywalkerNonFungibleAddress": "0x1AF65Fa4fd838074980CadB398969C9fA10c9Ce7",
-		"omniverseChainId": 0
-	},
-	"SEPOLIA": {
-		"nodeAddress": "https://sepolia.infura.io/v3/94ebec44ffc34501898dd5dccf387f81",
-		"chainId": 11155111,
-		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x64aEcC149f292eCbCf8Dd93B320d5a9780aba191",
-		"skywalkerNonFungibleAddress": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7",
-		"omniverseChainId": 5
-	},
-	"MUMBAI": {
-		"nodeAddress": "https://rpc-mumbai.maticvigil.com",
-		"chainId": 80001,
-		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x1181e9bbb48a5448c81cf1a2532a3d4257c69e22",
-		"skywalkerNonFungibleAddress": "0x4F77711365BB96969D763Fc8CB6cB40964aC94Ce",
-		"omniverseChainId": 6
-	},
-	"PLATON": {
-		"nodeAddress": "https://openapi2.platon.network/rpc",
-		"chainId": 210425,
-		"coolingDown": 10,
-		"skywalkerFungibleAddress": "0x0791B79Ba0DC124dd357633Bf298719aa12f7D59",
-		"skywalkerNonFungibleAddress": "0x13A689B55FF8Bf86a8dEAC357553eabDd93f78fb",
-		"omniverseChainId": 4
-	}
+  "BSCTEST": {
+    "nodeAddress": "https://bsc-testnet.public.blastapi.io",
+    "chainId": 97,
+    "coolingDown": 10,
+    "skywalkerFungibleAddress": {
+      "SKYWALKER": "0x12B22989407C8E6C69df5477AbD7b569b024Aba0"
+    },
+    "skywalkerNonFungibleAddress": {
+      "SKYWALKERNFT": "0x1AF65Fa4fd838074980CadB398969C9fA10c9Ce7"
+    },
+    "omniverseChainId": 0
+  },
+  "SEPOLIA": {
+    "nodeAddress": "https://sepolia.infura.io/v3/94ebec44ffc34501898dd5dccf387f81",
+    "chainId": 11155111,
+    "coolingDown": 10,
+    "skywalkerFungibleAddress": {
+      "SKYWALKER": "0x64aEcC149f292eCbCf8Dd93B320d5a9780aba191"
+    },
+    "skywalkerNonFungibleAddress": {
+      "SKYWALKERNFT": "0x081Ba0C5C458F1D350F95dc4e6Dc172e69F8Fff7"
+    },
+    "omniverseChainId": 5
+  },
+  "MUMBAI": {
+    "nodeAddress": "https://rpc-mumbai.maticvigil.com",
+    "chainId": 80001,
+    "coolingDown": 10,
+    "skywalkerFungibleAddress": "0x1181e9bbb48a5448c81cf1a2532a3d4257c69e22",
+    "skywalkerNonFungibleAddress": "0x4F77711365BB96969D763Fc8CB6cB40964aC94Ce",
+    "omniverseChainId": 6
+  },
+  "PLATON": {
+    "nodeAddress": "https://openapi2.platon.network/rpc",
+    "chainId": 210425,
+    "coolingDown": 10,
+    "skywalkerFungibleAddress": {
+      "SKYWALKER": "0x0791B79Ba0DC124dd357633Bf298719aa12f7D59"
+    },
+    "skywalkerNonFungibleAddress": {
+      "SKYWALKERNFT": "0x13A689B55FF8Bf86a8dEAC357553eabDd93f78fb"
+    },
+    "omniverseChainId": 4
+  }
 }
