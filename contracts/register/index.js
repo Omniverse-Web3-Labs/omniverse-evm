@@ -133,7 +133,7 @@ async function burn(from, amount) {
     let txData = {
         nonce: nonce,
         chainId: chainId,
-        initiateSC: netConfig.skywalkerFungibleAddress,
+        initiateSC: skywalkerFungibleContract.options.address,
         from: publicKey,
         payload: web3.eth.abi.encodeParameters(['uint8', 'bytes', 'uint256'], [BURN, from, amount]),
     };
