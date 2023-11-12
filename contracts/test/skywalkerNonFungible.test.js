@@ -335,6 +335,14 @@ contract('SkywalkerNonFungible', function() {
             await initContract();
         });
 
+        describe('To address error', function() {
+            it('should fail', async () => {
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeMint({pk: user2Pk, sk: user2Sk}, user1, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), "Format of exData error");
+            });
+        });
+
         describe('Not owner', function() {
             it('should fail', async () => {
                 let nonce = await nonFungible.getTransactionCount(user1Pk);
@@ -364,6 +372,14 @@ contract('SkywalkerNonFungible', function() {
         before(async function() {
             await initContract();
             await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID);
+        });
+
+        describe('From address error', function() {
+            it('should fail', async () => {
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeBurn({pk: user2Pk, sk: user2Sk}, user1, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), "Format of exData error");
+            });
         });
 
         describe('Not owner', function() {
@@ -402,6 +418,14 @@ contract('SkywalkerNonFungible', function() {
         before(async function() {
             await initContract();
             await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, TOKEN_ID);
+        });
+
+        describe('To address error', function() {
+            it('should fail', async () => {
+                let nonce = await nonFungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user2Pk, sk: user2Sk}, user2, TOKEN_ID, nonce);
+                await utils.expectThrow(nonFungible.sendOmniverseTransaction(txData), 'Format of exData error');
+            });
         });
 
         describe('Not token owner', function() {

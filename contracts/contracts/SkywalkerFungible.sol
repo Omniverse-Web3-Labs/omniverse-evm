@@ -129,6 +129,9 @@ contract SkywalkerFungible is ERC20, Ownable, IERC6358Fungible {
      */
     function _checkExecution(ERC6358TransactionData memory txData) internal view {
         Fungible memory fungible = decodeData(txData.payload);
+        // Check `to` address
+        require(fungible.exData.length == 64, "Format of exData error");
+
         if (fungible.op == TRANSFER) {
             _checkOmniverseTransfer(txData.from, fungible.amount);
         }

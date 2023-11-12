@@ -336,6 +336,14 @@ contract('SkywalkerFungible', function() {
             await initContract();
         });
 
+        describe('To address error', function() {
+            it('should fail', async () => {
+                let nonce = await fungible.getTransactionCount(user1Pk);
+                let txData = encodeMint({pk: user2Pk, sk: user2Sk}, user1, ONE_TOKEN, nonce);
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), "Format of exData error");
+            });
+        });
+
         describe('Not owner', function() {
             it('should fail', async () => {
                 let nonce = await fungible.getTransactionCount(user1Pk);
@@ -363,6 +371,14 @@ contract('SkywalkerFungible', function() {
         before(async function() {
             await initContract();
             await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
+        });
+
+        describe('From address error', function() {
+            it('should fail', async () => {
+                let nonce = await fungible.getTransactionCount(user1Pk);
+                let txData = encodeBurn({pk: user2Pk, sk: user2Sk}, user1, ONE_TOKEN, nonce);
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), "Format of exData error");
+            });
         });
 
         describe('Not owner', function() {
@@ -400,6 +416,14 @@ contract('SkywalkerFungible', function() {
         before(async function() {
             await initContract();
             await mintToken({pk: ownerPk, sk: ownerSk}, user1Pk, ONE_TOKEN);
+        });
+
+        describe('To address error', function() {
+            it('should fail', async () => {
+                let nonce = await fungible.getTransactionCount(user1Pk);
+                let txData = encodeTransfer({pk: user1Pk, sk: user1Sk}, user2, TEN_TOKEN, nonce);
+                await utils.expectThrow(fungible.sendOmniverseTransaction(txData), 'Format of exData error');
+            });
         });
 
         describe('Exceed balance', function() {

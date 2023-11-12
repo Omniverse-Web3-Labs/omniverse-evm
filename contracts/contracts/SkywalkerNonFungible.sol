@@ -267,6 +267,9 @@ contract SkywalkerNonFungible is Ownable, IERC6358NonFungible, IERC721, IERC721M
      */
     function _checkExecution(ERC6358TransactionData memory txData) internal view {
         NonFungible memory nonFungible = decodeData(txData.payload);
+        // Check `to` address
+        require(nonFungible.exData.length == 64, "Format of exData error");
+
         if (nonFungible.op == TRANSFER) {
             _checkOmniverseTransfer(txData.from, nonFungible.tokenId);
         }
